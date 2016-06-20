@@ -1,6 +1,7 @@
 package com.simple.admin.util;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class MD5Util {
 
@@ -21,6 +22,10 @@ public class MD5Util {
 		return hexDigits[d1] + hexDigits[d2];
 	}
 
+	public static String MD5Encode(String origin){
+		return MD5Util.MD5Encode(origin, null);
+	}
+	
 	/** 加密规则： 
 	 * 按照被加密字符串和盐值字符串的字节码拼接的字符串做加密
 	 * @param origin 被加密字符串
@@ -28,25 +33,21 @@ public class MD5Util {
 	 * @return
 	 */
 	public static String MD5Encode(String origin, String charsetname) {
-		String resultString = null;
 		try {
-			resultString = new String(origin);
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			if (charsetname == null || "".equals(charsetname))
-				resultString = byteArrayToHexString(md.digest(resultString.getBytes()));
-			else
-				resultString = byteArrayToHexString(md.digest((resultString.getBytes().toString() + charsetname.getBytes().toString()).getBytes()));
-		} catch (Exception e) {
+			return charsetname == null?
+					byteArrayToHexString(MessageDigest.getInstance("MD5").digest(origin.getBytes()))
+					: byteArrayToHexString(MessageDigest.getInstance("MD5").digest((origin.getBytes().toString() + charsetname.getBytes().toString()).getBytes()));
+		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
+			return null;
 		}
-		return resultString;
 	}
 
 	private static final String hexDigits[] = { "0", "1", "2", "3", "4", "5",
 			"6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
 	
 	public static void main(String[] args) {
-		String a = MD5Util.MD5Encode("admin", "123");
+		String a = MD5Util.MD5Encode("admin");
 		System.out.println(a);
 	}
 
