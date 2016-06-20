@@ -8,6 +8,8 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,7 @@ public class UserController {
 	
 	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
-	private Map<String, String> cacheValidatorCode = new HashMap<String, String>();
+	private static Map<String, String> cacheValidatorCode = new HashMap<String, String>();
 	
 	@Autowired
 	UserService userService;
@@ -41,6 +43,11 @@ public class UserController {
 			String validateCode = AjaxWebUtil.getRequestParameter(request,"validateCode");
 			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
 			String wechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo");
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("userPhone", userPhone);
+			if(checkUserUnique("user.selectOne",params)){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"重复的用户", null);
+			};
 			if(password == null){
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"密码不能为空", null);
 			}
@@ -78,51 +85,49 @@ public class UserController {
 		}
 	}
 	
-//	@RequestMapping(value = "modifyPwd",method=RequestMethod.POST)
-//	@ResponseBody
-//	@SuppressWarnings("unchecked")
-//	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
-//		try {
-//			String data = request.getParameter("data");
-//			Map<String, Object> params = (Map<String, Object>) JSON.parse(data);
-//			User user = userService.getById("user.selectOne", Integer.parseInt(params.get("id").toString()));
-//			if(params.get("oldPwd") == null){
-//				return JSON.toJSONString(new ResultData(false,"旧密码不能为空"));
-//			}
-//			if(params.get("newPwd") == null){
-//				return JSON.toJSONString(new ResultData(false,"新密码不能为空"));
-//			}
-//			String oldPwd = params.get("oldPwd").toString();
-//			String newPwd = params.get("newPwd").toString();
-//			if(!oldPwd.equals(newPwd)){
-//				return JSON.toJSONString(new ResultData(false,"新密码与旧密码不匹配"));
-//			}
-//			String salt = UUID.randomUUID().toString();
-//			String mPassword = MD5Util.MD5Encode(newPwd, salt);
-//			user.setPassword(mPassword);
-//			user.setSalt(salt);
-//			Map<String, Object> beanMap = BeanUtils.describe(user);
-//			beanMap.putAll(params);
-//			int id = userService.update("user.modify",beanMap);
-//			if(id != 1){
-//				return JSON.toJSONString(new ResultData(false,"更新失败"));
-//			}
-//			BeanUtils.copyProperties(user, beanMap);
-//			request.getSession().setAttribute(Constant.CURRENT_USER,user);
-//			return JSON.toJSONString(new ResultData(true, "更新成功"));
-//		}catch(Exception e) {
-//			log.error(e.getMessage(),e);
-//			return JSON.toJSONString(new ResultData(true, e.getMessage()));
-//		}
-//	}
-//	
+	@RequestMapping(value = "modifyPwd",method=RequestMethod.POST)
+	@ResponseBody
+	@SuppressWarnings("unchecked")
+	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
+			String validateCode = AjaxWebUtil.getRequestParameter(request,"validateCode");
+			String newPassword = AjaxWebUtil.getRequestParameter(request,"newPassword");
+			if(newPassword == null){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"新密码不能为空", null);
+			}
+			if(!validateCode.equals(cacheValidatorCode.get(userPhone))){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"验证码错误", null);
+			}
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("userPhone", userPhone);
+			User user = userService.selectOne("user.selectOne", params);
+			if ( null == user ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在", null);
+			}
+			String salt = UUID.randomUUID().toString();
+			String mPassword = MD5Util.MD5Encode(newPassword, salt);
+			user.setPassword(mPassword);
+			user.setSalt(salt);
+			int id = userService.update(user);
+			if(id != 1){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", null);
+			}
+			request.getSession().setAttribute(Constant.CURRENT_USER,user);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"更新成功", null);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", e.getMessage());
+		}
+	}
+	
+	// TODO 链条前端参数
 //	@RequestMapping(value = "modifyUser",method=RequestMethod.POST)
 //	@ResponseBody
 //	@SuppressWarnings("unchecked")
 //	public String modifyUser(HttpServletRequest request, HttpServletResponse response) {
 //		try {
-//			String data = request.getParameter("data");
-//			Map<String, Object> params = (Map<String, Object>) JSON.parse(data);
+//			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
 //			User user = userService.getById("user.selectOne", Integer.parseInt(params.get("id").toString()));
 //			Map<String, Object> beanMap = BeanUtils.describe(user);
 //			beanMap.putAll(params);
@@ -138,21 +143,17 @@ public class UserController {
 //			return JSON.toJSONString(new ResultData(true, e.getMessage()));
 //		}
 //	}
-//	
-//	
-//	private ResultData checkUserUnique(String statement, Map<String, Object> params) {
-//		ResultData resp = null;
-//		User user = userService.selectOne(statement, params);
-//		if(user != null){
-//			if(StringUtils.isNotEmpty(user.getLoginName())){
-//				resp = new ResultData(false, "用户名已存在");
-//			}else if(user.getUserPhone() != 0 ){
-//				resp = new ResultData(false, "用户手机已存在");
-//			}
-//			return resp;
-//		}
-//		return null;
-//	}
+	
+	private boolean checkUserUnique(String statement, Map<String, Object> params) {
+		User user = userService.selectOne(statement, params);
+		if(user != null){
+			if(StringUtils.isNotEmpty(user.getUserPhone())){
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
 //	
 	private String getValidateCode(){
 		int[] chars = {0,1,2,3,4,5,6,7,8,9};
