@@ -36,7 +36,7 @@ public class MD5Util {
 		try {
 			return charsetname == null?
 					byteArrayToHexString(MessageDigest.getInstance("MD5").digest(origin.getBytes()))
-					: byteArrayToHexString(MessageDigest.getInstance("MD5").digest((origin.getBytes().toString() + charsetname.getBytes().toString()).getBytes()));
+					: byteArrayToHexString(MessageDigest.getInstance("MD5").digest((origin + charsetname).getBytes()));
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 			return null;
@@ -47,8 +47,10 @@ public class MD5Util {
 			"6", "7", "8", "9", "a", "b", "c", "d", "e", "f" };
 	
 	public static void main(String[] args) {
-		String a = MD5Util.MD5Encode("admin");
+		String a = MD5Util.MD5Encode("admin","123");
 		System.out.println(a);
+		String a0 = MD5Util.MD5Encode("admin","123");
+		System.out.println(a0);
 	}
 
 }

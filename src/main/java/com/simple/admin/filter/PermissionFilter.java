@@ -52,8 +52,8 @@ public class PermissionFilter
       //判断用户是否已经登录，已经登录的跳转，没有登录跳转到登录页面
       User user = (User) request.getSession().getAttribute(Constant.CURRENT_USER);
       if ( null == user ) {
-    	  //AjaxWebUtil.sendAjaxResponse(request, response, new ResponseInfo(new ResponseStatus(false,"当前用户未登录"), "当前用户未登录"));
     	  redirectLogin(request,response);
+    	  //chain.doFilter(servletRequest, servletResponse); 
       }else {
     	  chain.doFilter(servletRequest, servletResponse); 
       }
@@ -106,8 +106,7 @@ public class PermissionFilter
 			this.logger.error(e.getMessage(), e);
 		}
 	} else {
-		AjaxWebUtil.sendAjaxResponse(request, response,
-				new ResponseInfo(new ResponseStatus(true, "000000", "验证成功！"), "ok"));
+		AjaxWebUtil.sendAjaxResponse(request, response,new ResponseInfo(new ResponseStatus(false,"请重新登录"), null));
 	}
   }
 }

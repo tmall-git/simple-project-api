@@ -105,10 +105,9 @@ public class UserController {
 			if ( null == user ) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在", null);
 			}
-			String salt = UUID.randomUUID().toString();
+			String salt = user.getSalt();
 			String mPassword = MD5Util.MD5Encode(newPassword, salt);
 			user.setPassword(mPassword);
-			user.setSalt(salt);
 			int id = userService.update(user);
 			if(id != 1){
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", null);
