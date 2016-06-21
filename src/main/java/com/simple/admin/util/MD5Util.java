@@ -27,7 +27,7 @@ public class MD5Util {
 	}
 	
 	/** 加密规则： 
-	 * 按照被加密字符串和盐值字符串的字节码拼接的字符串做加密
+	 * 按照被加密字符串和盐值字符串拼接的字符串做加密
 	 * @param origin 被加密字符串
 	 * @param charsetname 加密盐值
 	 * @return
