@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.util.AjaxWebUtil;
+import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.MD5Util;
 import com.simple.constant.Constant;
 import com.simple.model.User;
@@ -63,7 +64,7 @@ public class UserController {
 			u.setPassword(mPassword);
 			u.setLoginName(userPhone);
 			userService.insert(u);
-			request.getSession().setAttribute(Constant.CURRENT_USER,u);
+			LoginUserUtil.setCurrentUser(request, u);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"注册成功", null);
 		}catch(Exception e) {
 			log.error("注册失败",e);
@@ -112,7 +113,7 @@ public class UserController {
 			if(id != 1){
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", null);
 			}
-			request.getSession().setAttribute(Constant.CURRENT_USER,user);
+			LoginUserUtil.setCurrentUser(request, user);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"更新成功", null);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
+import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.PatternUtils;
 import com.simple.common.config.EnvPropertiesConfiger;
 import com.simple.model.ResponseInfo;
@@ -50,7 +51,7 @@ public class PermissionFilter
     }
     else {
       //判断用户是否已经登录，已经登录的跳转，没有登录跳转到登录页面
-      User user = (User) request.getSession().getAttribute(Constant.CURRENT_USER);
+      User user = LoginUserUtil.getCurrentUser(request);
       if ( null == user ) {
     	  redirectLogin(request,response);
     	  //chain.doFilter(servletRequest, servletResponse); 
