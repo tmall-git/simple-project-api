@@ -33,6 +33,19 @@ public class UserController {
 	@Autowired
 	UserService userService;
 	
+	@RequestMapping(value="info",method=RequestMethod.GET)
+	@ResponseBody
+	public String getValidateCode(HttpServletRequest request, HttpServletResponse response){
+		try {
+			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
+			User user = userService.queryByPhone(phone);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", user);
+		}
+		catch (Exception e){
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询失败", null);
+		}
+	}
+	
 	@RequestMapping(value = "register",method=RequestMethod.POST)
 	@ResponseBody
 	public String register(HttpServletRequest request, HttpServletResponse response) {

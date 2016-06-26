@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.mysql.jdbc.Constants;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
@@ -63,7 +64,7 @@ public class ProductController {
 	@ResponseBody
 	public String buy(Integer id,HttpServletRequest request, HttpServletResponse response){
 		try {
-			int stock = productService.reduceStock(id);
+			int stock = productService.updateStock(id);
 			if (stock<=0) {
 				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"购买失败!商品没有库存.", null);
 			}
@@ -86,7 +87,7 @@ public class ProductController {
 			String price = AjaxWebUtil.getRequestParameter(request,"price");
 			String description = AjaxWebUtil.getRequestParameter(request,"description");
 			String tip = AjaxWebUtil.getRequestParameter(request,"tip");
-			String productStatus = AjaxWebUtil.getRequestParameter(request,"productStatus");
+			int productStatus = Constant.PRODUCT_STATUS_CREATE;//AjaxWebUtil.getRequestParameter(request,"productStatus");
 			String[] imges = request.getParameterValues("images");
 			Product p = new Product();
 			p.setName(name);
@@ -94,7 +95,7 @@ public class ProductController {
 			p.setPrice(Double.parseDouble(price));
 			p.setDescription(description);
 			p.setTip(tip);
-			p.setProductStatus(Integer.parseInt(productStatus));
+			p.setProductStatus(productStatus);
 			p.setOwner(LoginUserUtil.getCurrentUser(request).getUserPhone());
 			productService.insert(p, imges);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"添加成功", null);
