@@ -1,5 +1,8 @@
 package com.simple.admin.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -24,6 +27,21 @@ public class ProductController {
 
 	@Autowired
 	ProductService productService;
+	
+	@RequestMapping(value="list",method=RequestMethod.GET)
+	@ResponseBody
+	public String list(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			List<String> owners = new ArrayList<String>();
+			owners.add(LoginUserUtil.getCurrentUser(request).getUserPhone());
+			List<Product> products= productService.query(null, owners , pageIndex, pageSize);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", products);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+		}
+	}
 	
 	
 	@RequestMapping(value="info",method=RequestMethod.GET)

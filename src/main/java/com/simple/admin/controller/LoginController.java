@@ -49,4 +49,10 @@ public class LoginController {
 		return AjaxWebUtil.sendAjaxResponse(request, response, true,"登出成功", null);
 	}
 	
+	@RequestMapping(value = "loginpage",method=RequestMethod.GET)
+	public String loginpage(HttpServletRequest request, HttpServletResponse response) {
+		request.setAttribute("rootpath", request.getRequestURI().replace(request.getContextPath(), ""));
+		return "login";
+	}
+	
 }

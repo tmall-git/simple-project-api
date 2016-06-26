@@ -5,9 +5,11 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
@@ -19,9 +21,11 @@ import com.simple.service.OrderService;
 @RequestMapping("/order")
 public class OrderController {
 
+	@Autowired
 	OrderService orderService;
 	
 	@RequestMapping("orderList")
+	@ResponseBody
 	public String getOrderList(HttpServletRequest request, HttpServletResponse response){
 		String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
 		String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
@@ -37,6 +41,7 @@ public class OrderController {
 	}
 	
 	@RequestMapping("orderDetail")
+	@ResponseBody
 	public String getOrderDetail(HttpServletRequest request, HttpServletResponse response){
 		String prmId = AjaxWebUtil.getRequestParameter(request,"id");
 		Order order = orderService.getOrdersById(Integer.parseInt(prmId));
@@ -47,6 +52,7 @@ public class OrderController {
 	}
 	
 	@RequestMapping("sendProduct")
+	@ResponseBody
 	public String sendProduct(HttpServletRequest request, HttpServletResponse response){
 		String prmOrderId = AjaxWebUtil.getRequestParameter(request,"id");
 		boolean isSend = orderService.sendProduct(Integer.parseInt(prmOrderId));
@@ -57,6 +63,7 @@ public class OrderController {
 	}
 	
 	@RequestMapping("returnProduct")
+	@ResponseBody
 	public String returnProduct(HttpServletRequest request, HttpServletResponse response){
 		String prmOrderId = AjaxWebUtil.getRequestParameter(request,"id");
 		String prmReturnStatus = AjaxWebUtil.getRequestParameter(request,"status");
