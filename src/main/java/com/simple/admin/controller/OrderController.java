@@ -1,7 +1,5 @@
 package com.simple.admin.controller;
 
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.model.Order;
+import com.simple.model.PageResult;
 import com.simple.model.User;
 import com.simple.service.OrderService;
 
@@ -33,11 +32,11 @@ public class OrderController {
 		User user = (User)request.getSession().getAttribute(Constant.CURRENT_USER);
 		String userPhone = user.getUserPhone();
 		Integer orderStatus = StringUtils.isEmpty(prmOrderStatus) ? null : Integer.valueOf(prmOrderStatus);
-		List<Order> orderLists = orderService.getOrdersLists(userPhone, orderStatus, Integer.parseInt(pageIndex), Integer.parseInt(pageSize));
-		if(orderLists == null || orderLists.isEmpty()){
+		PageResult result = orderService.getOrdersLists(userPhone, orderStatus, Integer.parseInt(pageIndex), Integer.parseInt(pageSize));
+		if(result == null){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "该用户没有订单", null);
 		}
-		return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单列表查询成功", orderLists);
+		return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单列表查询成功", result);
 	}
 	
 	@RequestMapping("orderDetail")
