@@ -115,7 +115,6 @@ public class ProductController {
 	
 	@RequestMapping(value = "delete",method=RequestMethod.GET)
 	@ResponseBody
-	@SuppressWarnings("unchecked")
 	public String delete(Integer id,int status,HttpServletRequest request, HttpServletResponse response) {
 		try {
 			productService.updateProductStatus(id,status);

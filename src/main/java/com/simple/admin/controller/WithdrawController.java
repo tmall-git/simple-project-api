@@ -21,7 +21,6 @@ import com.simple.model.User;
 import com.simple.service.BaseService;
 import com.simple.service.WithdrawService;
 
-
 @Controller
 @RequestMapping("account")
 public class WithdrawController {
