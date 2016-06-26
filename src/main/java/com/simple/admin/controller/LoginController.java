@@ -42,4 +42,11 @@ public class LoginController {
 		return AjaxWebUtil.sendAjaxResponse(request, response, true,"登陆成功", null);
 	}
 	
+	@RequestMapping(value = "logout",method=RequestMethod.GET)
+	@ResponseBody
+	public String logout(HttpServletRequest request, HttpServletResponse response){
+		LoginUserUtil.removeCurrentUser(request);
+		return AjaxWebUtil.sendAjaxResponse(request, response, true,"登出成功", null);
+	}
+	
 }
