@@ -2,6 +2,7 @@ package com.simple.admin.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,12 +67,7 @@ public class ProductController {
 			String description = AjaxWebUtil.getRequestParameter(request,"description");
 			String tip = AjaxWebUtil.getRequestParameter(request,"tip");
 			String productStatus = AjaxWebUtil.getRequestParameter(request,"productStatus");
-			String imges = AjaxWebUtil.getRequestParameter(request,"imges");
-			String[] imagearrays = null;
-			if ( null != imges) {
-				imagearrays = imges.split(",");
-			}
-			
+			String[] imges = request.getParameterValues("images");
 			Product p = new Product();
 			p.setName(name);
 			p.setStock(Integer.parseInt(stock));
@@ -80,7 +76,7 @@ public class ProductController {
 			p.setTip(tip);
 			p.setProductStatus(Integer.parseInt(productStatus));
 			p.setOwner(LoginUserUtil.getCurrentUser(request).getUserPhone());
-			productService.insert(p, imagearrays);
+			productService.insert(p, imges);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"添加成功", null);
 		}catch(Exception e) {
 			log.error("添加失败",e);
@@ -99,11 +95,8 @@ public class ProductController {
 			String description = AjaxWebUtil.getRequestParameter(request,"description");
 			String tip = AjaxWebUtil.getRequestParameter(request,"tip");
 			String productStatus = AjaxWebUtil.getRequestParameter(request,"productStatus");
-			String imges = AjaxWebUtil.getRequestParameter(request,"imges");
+			String[] imges = request.getParameterValues("images");
 			String[] imagearrays = null;
-			if ( null != imges) {
-				imagearrays = imges.split(",");
-			}
 			Product p = productService.getById(id);
 			p.setName(name);
 			p.setStock(Integer.parseInt(stock));
@@ -111,7 +104,7 @@ public class ProductController {
 			p.setDescription(description);
 			p.setTip(tip);
 			p.setProductStatus(Integer.parseInt(productStatus));
-			productService.insert(p, imagearrays);
+			productService.insert(p, imges);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"修改成功", null);
 		}catch(Exception e) {
 			log.error("修改失败",e);
