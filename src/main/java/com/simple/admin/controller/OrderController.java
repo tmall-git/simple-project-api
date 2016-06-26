@@ -55,7 +55,7 @@ public class OrderController {
 	@ResponseBody
 	public String sendProduct(HttpServletRequest request, HttpServletResponse response){
 		String prmOrderId = AjaxWebUtil.getRequestParameter(request,"id");
-		boolean isSend = orderService.sendProduct(Integer.parseInt(prmOrderId));
+		boolean isSend = orderService.updateProductToSend(Integer.parseInt(prmOrderId));
 		if(isSend){
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "发货成功", null);
 		}
@@ -68,7 +68,7 @@ public class OrderController {
 		String prmOrderId = AjaxWebUtil.getRequestParameter(request,"id");
 		String prmReturnStatus = AjaxWebUtil.getRequestParameter(request,"status");
 		String prmReturnRemark = AjaxWebUtil.getRequestParameter(request,"remark");
-		boolean isReturn = orderService.returnProduct(
+		boolean isReturn = orderService.updateReturnProduct(
 						Integer.parseInt(prmOrderId), Integer.parseInt(prmReturnStatus), prmReturnRemark);
 		if(isReturn){
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "成功", null);
