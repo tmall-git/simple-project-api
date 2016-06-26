@@ -100,19 +100,19 @@ public class PermissionFilter
   }
 
   private void redirectLogin(HttpServletRequest request, HttpServletResponse response) {
-	  try {
-		response.sendRedirect("/loginpage");
-	} catch (IOException e) {
-		e.printStackTrace();
-	}
-//	if (!AjaxWebUtil.isAjaxRequest(request)) {
-//		try {
-//			response.sendRedirect("/login/login");
-//		} catch (IOException e) {
-//			this.logger.error(e.getMessage(), e);
-//		}
-//	} else {
-//		AjaxWebUtil.sendAjaxResponse(request, response,new ResponseInfo(new ResponseStatus(false,"请重新登录"), null));
+//	  try {
+//		response.sendRedirect(EnvPropertiesConfiger.getValue("redirectpage"));
+//	} catch (IOException e) {
+//		e.printStackTrace();
 //	}
+	if (!AjaxWebUtil.isAjaxRequest(request)) {
+		try {
+			response.sendRedirect(EnvPropertiesConfiger.getValue("redirectpage"));
+		} catch (IOException e) {
+			this.logger.error(e.getMessage(), e);
+		}
+	} else {
+		AjaxWebUtil.sendAjaxResponse(request, response,new ResponseInfo(new ResponseStatus(false,ResponseStatus.REDIRECT,"请重新登录"), null));
+	}
   }
 }

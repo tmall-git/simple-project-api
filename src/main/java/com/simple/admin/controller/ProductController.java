@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.model.PageResult;
 import com.simple.model.Product;
 import com.simple.service.ProductService;
 
@@ -34,7 +36,7 @@ public class ProductController {
 		try {
 			List<String> owners = new ArrayList<String>();
 			owners.add(LoginUserUtil.getCurrentUser(request).getUserPhone());
-			List<Product> products= productService.query(null, owners , pageIndex, pageSize);
+			PageResult products= productService.query(null, owners ,Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize);
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", products);
 		}
 		catch (Exception e){
