@@ -6,6 +6,9 @@ package com.simple.admin.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -99,6 +102,23 @@ public class AjaxWebUtil{
 	} 
 	
 	public static String getRequestParameter(HttpServletRequest req,String name) {
+		return getRequestParameter(req,name,false);
+	}
+	
+	public static String getRequestParameter(HttpServletRequest req,String name,boolean decoder) {
+		String r = req.getParameter(name);
+		if ( null != r) {
+			if (decoder) {
+				try {
+					return URLDecoder.decode(r,"utf-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+					return r;
+				}
+			}else {
+				return r;
+			}
+		}
 		Map res = req.getParameterMap();
 		if ( null != res) {
 			for (Iterator<String> it = res.keySet().iterator();it.hasNext();) {
@@ -107,9 +127,25 @@ public class AjaxWebUtil{
 				if ( key.equals(name) ) {
 					if (null != o) {
 						if (o instanceof String) {
+							if (decoder) {
+								try {
+									return URLDecoder.decode((String) o,"utf-8");
+								} catch (UnsupportedEncodingException e) {
+									e.printStackTrace();
+									return null;
+								}
+							}
 							return (String) o;
 						}else if(o instanceof String[]) {
 							String[] a = (String[]) o;
+							if (decoder) {
+								try {
+									return URLDecoder.decode(a[0],"utf-8");
+								} catch (UnsupportedEncodingException e) {
+									e.printStackTrace();
+									return null;
+								}
+							}
 							return a[0];
 						}
 					}
