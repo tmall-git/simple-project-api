@@ -136,7 +136,7 @@ public class ProductController {
 			p.setTip(tip);
 			p.setFirstImg(firstImg);
 			//p.setProductStatus(Integer.parseInt(productStatus));
-			productService.update(p, imges);
+			productService.update(p,imges);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"修改成功", null);
 		}catch(Exception e) {
 			log.error("修改失败",e);
