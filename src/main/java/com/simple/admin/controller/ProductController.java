@@ -64,6 +64,7 @@ public class ProductController {
 		}
 	}
 	
+	// TODO 添加是否有seller验证
 	@RequestMapping(value="buy",method=RequestMethod.POST)
 	@ResponseBody
 	public String buy(Integer id,HttpServletRequest request, HttpServletResponse response){
