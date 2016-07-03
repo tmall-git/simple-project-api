@@ -21,6 +21,7 @@ import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
+import com.simple.model.SellerMainVO;
 import com.simple.model.User;
 import com.simple.model.UserSellCount;
 import com.simple.service.AgentSellerService;
@@ -78,6 +79,19 @@ public class HomeController {
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"查询失败", e.getMessage());
+		}
+	}
+	
+	@RequestMapping(value = "sellerMain",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerMain(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			SellerMainVO smVO = userService.toSellerMain(user);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", smVO);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
 	}
 	
