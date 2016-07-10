@@ -21,6 +21,7 @@ import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
+import com.simple.model.SellerJoinHeadVO;
 import com.simple.model.SellerMainVO;
 import com.simple.model.User;
 import com.simple.model.UserSellCount;
@@ -94,6 +95,21 @@ public class HomeController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
 	}
+	
+	@RequestMapping(value = "sellerJoinList",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerJoinList(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<SellerJoinHeadVO> lists = agentSellerService.getSellerJoinList(user.getUserPhone());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", lists);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	
 	
 	@RequestMapping(value = "modifyUser",method=RequestMethod.POST)
 	@ResponseBody
