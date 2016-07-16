@@ -22,6 +22,7 @@ import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
 import com.simple.model.SellerJoinHeadVO;
+import com.simple.model.SellerListVO;
 import com.simple.model.SellerMainVO;
 import com.simple.model.User;
 import com.simple.model.UserSellCount;
@@ -83,12 +84,37 @@ public class HomeController {
 		}
 	}
 	
-	@RequestMapping(value = "sellerMain",method=RequestMethod.GET)
+	@RequestMapping(value = "sellerMainHead",method=RequestMethod.GET)
 	@ResponseBody
-	public String sellerMain(HttpServletRequest request, HttpServletResponse response) {
+	public String sellerMainHead(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			Map<String, Object> smVO = userService.toSellerMain(user);
+			SellerMainVO vo = userService.toSellerMainHead(user);
+			vo.setBalance(user.getBalance());
+			vo.setWithdrawAmount(user.getBalance());
+			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", vo);
+			log.debug(result);
+			return result;
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	@RequestMapping(value = "sellerMainList",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerMainList(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
+			String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
+			Integer pageIndex = StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
+			Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
+			Map<String, Object> params = new HashMap<String, Object>();
+			params.put("pageIndex", (pageIndex - 1) * pageSize);
+			params.put("pageSize", pageSize);
+			User user = LoginUserUtil.getCurrentUser(request);
+			params.put("userPhone", user.getUserPhone());
+			List<SellerListVO> smVO = userService.toSellerMainList(params);
 			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", smVO);
 			log.debug(result);
 			return result;
@@ -112,8 +138,6 @@ public class HomeController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
 	}
-	
-	
 	
 	@RequestMapping(value = "modifyUser",method=RequestMethod.POST)
 	@ResponseBody
