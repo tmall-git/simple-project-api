@@ -30,16 +30,25 @@ public class LoginController {
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("userPhone", userPhone);
-		User user = userService.selectOne("user.selectOne", params);
+		User user = null;
+		try {
+			user = userService.selectOne("user.selectOne", params);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if(user == null){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在，请注册", null);
 		}
 		String dbPwd = user.getPassword(); 
-		if(!dbPwd.equals(MD5Util.MD5Encode(password, user.getSalt()))){
+		if(!dbPwd.equals(getMD5Password(password, user))){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"密码错误", null);
 		}
 		LoginUserUtil.setCurrentUser(request, user);
 		return AjaxWebUtil.sendAjaxResponse(request, response, true,"登陆成功", null);
+	}
+
+	private String getMD5Password(String password, User user) {
+		return MD5Util.MD5Encode(password, user.getSalt());
 	}
 	
 	@RequestMapping(value = "logout",method=RequestMethod.GET)
@@ -55,4 +64,11 @@ public class LoginController {
 		return "login";
 	}
 	
+	public static void main(String[] args) {
+		LoginController lc = new LoginController();
+		User user = new User();
+		user.setSalt("b65d024c-5d35-4207-b1ec-64ccb2abd32f");
+		String md5 = lc.getMD5Password("123456", user);
+		System.out.println(md5);
+	}
 }

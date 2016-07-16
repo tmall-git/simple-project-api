@@ -154,6 +154,19 @@ public class UserController {
 		}
 	}
 	
+	@RequestMapping(value = "claimAgent",method=RequestMethod.POST)
+	@ResponseBody
+	public String claimAgent(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String agentPhone = AjaxWebUtil.getRequestParameter(request,"agentPhone");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	private boolean checkUserUnique(String statement, Map<String, Object> params) {
 		User user = userService.selectOne(statement, params);
 		if(user != null){

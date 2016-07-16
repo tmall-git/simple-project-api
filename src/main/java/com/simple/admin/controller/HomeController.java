@@ -88,8 +88,10 @@ public class HomeController {
 	public String sellerMain(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			SellerMainVO smVO = userService.toSellerMain(user);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", smVO);
+			Map<String, Object> smVO = userService.toSellerMain(user);
+			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", smVO);
+			log.debug(result);
+			return result;
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
@@ -101,8 +103,10 @@ public class HomeController {
 	public String sellerJoinList(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<SellerJoinHeadVO> lists = agentSellerService.getSellerJoinList(user.getUserPhone());
-			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", lists);
+			List<Map<String, Object>> lists = agentSellerService.getSellerJoinList(user.getUserPhone());
+			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", lists);
+			log.debug(result);
+			return result;
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
