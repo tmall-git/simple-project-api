@@ -16,12 +16,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.github.pagehelper.PageInfo;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
-import com.simple.model.SellerJoinHeadVO;
+import com.simple.model.SellerJoinVO;
 import com.simple.model.SellerListVO;
 import com.simple.model.SellerMainVO;
 import com.simple.model.User;
@@ -107,15 +108,16 @@ public class HomeController {
 		try {
 			String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
 			String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
-			Integer pageIndex = StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
+			Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
 			Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("pageIndex", (pageIndex - 1) * pageSize);
-			params.put("pageSize", pageSize);
 			User user = LoginUserUtil.getCurrentUser(request);
-			params.put("userPhone", user.getUserPhone());
-			List<SellerListVO> smVO = userService.toSellerMainList(params);
-			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", smVO);
+			PageInfo<SellerListVO> page = userService.toSellerMainList(user.getUserPhone(), pageIndex, pageSize);
+			List<SellerListVO> pageList = page.getList();
+			Long totalCount = page.getTotal();
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("datas", pageList);
+			data.put("totalCount", totalCount);
+			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", data);
 			log.debug(result);
 			return result;
 		}catch(Exception e) {
@@ -128,9 +130,18 @@ public class HomeController {
 	@ResponseBody
 	public String sellerJoinList(HttpServletRequest request, HttpServletResponse response) {
 		try {
+			String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
+			String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
+			Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
+			Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Map<String, Object>> lists = agentSellerService.getSellerJoinList(user.getUserPhone());
-			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", lists);
+			PageInfo<SellerJoinVO> page = agentSellerService.getSellerJoinList(user.getUserPhone(), pageIndex, pageSize);
+			List<SellerJoinVO> pageList = page.getList();
+			Long totalCount = page.getTotal();
+			Map<String, Object> data = new HashMap<String, Object>();
+			data.put("datas", pageList);
+			data.put("totalCount", totalCount);
+			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", data);
 			log.debug(result);
 			return result;
 		}catch(Exception e) {
