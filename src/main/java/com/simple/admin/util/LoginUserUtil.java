@@ -8,11 +8,12 @@ import com.simple.model.User;
 public class LoginUserUtil {
 
 	public static User getCurrentUser(HttpServletRequest request) {
-		//return (User) request.getSession().getAttribute(Constant.CURRENT_USER);
-		User user = new User();
-		user.setUserPhone("18600671341");
-		user.setWeChatNo("adfasdfasfd");
-		return user;
+		return (User) request.getSession().getAttribute(Constant.CURRENT_USER);
+//		User user = new User();
+//		user.setUserPhone("18600671341");
+//		user.setWeChatNo("adfasdfasfd");
+//		user.setCategory("鞋、袜子");
+//		return user;
 	}
 	public static void setCurrentUser(HttpServletRequest request,User user) {
 		request.getSession().setAttribute(Constant.CURRENT_USER,user);

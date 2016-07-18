@@ -55,7 +55,7 @@ public class AgentSellerController {
 			as.setSellerPhone(seller.getUserPhone());
 			as.setSellerName(seller.getWeChatNo());
 			as.setAgentPhone(owner);
-			as.setChargePercent(100.00);
+			as.setChargePercent(0.00);
 			User user = userService.queryByPhone(owner);
 			as.setAgentName(user.getWeChatNo());
 			agentSellerService.add(as);

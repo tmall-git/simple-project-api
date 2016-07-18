@@ -1,5 +1,7 @@
 package com.simple.admin.controller;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +50,7 @@ public class ProductController {
 			User seller = LoginUserUtil.getCurrentUser(request);
 			List<String> owners = productService.queryProductOwners(pageIndex, pageSize);
 			List<ShopList> shoplist = null;
+			DecimalFormat df=new DecimalFormat(".##");
 			if ( null != owners ) {
 				shoplist = new ArrayList<ShopList>();
 				for ( int i = 0 ; i < owners.size() ; i ++) {
@@ -69,7 +72,7 @@ public class ProductController {
 							Product p = products.get(j);
 							ShopProduct sp = new ShopProduct();
 							sp.setProductName(p.getName());
-							sp.setPrice(p.getPrice());
+							sp.setPrice(df.format(p.getPrice()));
 							sp.setImage(p.getFirstImg());
 							//查询设置的提成
 							List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
@@ -79,12 +82,16 @@ public class ProductController {
 								ass = agentSellerService.queryListByPhone(owner, null, 1, 1);
 							}
 							double syscharge = agentSellerService.queryCharge();
-							double percent = 100;
+							double percent = syscharge;
 							if (null != ass && ass.size() > 0) {
 								AgentSeller as = ass.get(0);
 								percent = as.getChargePercent();
 							}
-							sp.setCharge(p.getPrice()*(percent-syscharge)/100.00);
+							double chargedouble = p.getPrice()*(percent-syscharge)/100.00;
+							if (chargedouble<0) {
+								chargedouble = 0d;
+							}
+							sp.setCharge(df.format(chargedouble));
 							shopProducts.add(sp);
 						}
 						sl.setProducts(shopProducts);
@@ -100,9 +107,6 @@ public class ProductController {
 			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品错误:"+e.getLocalizedMessage(), null);
 		}
 	}
-	
-	
-	
 	
 	@RequestMapping(value="list",method=RequestMethod.GET)
 	@ResponseBody

@@ -57,8 +57,8 @@ public class HomeController {
 	public String agentSellCount(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			double charge = orderService.queryAgentTotalCharge(phone);
-			double total = orderService.queryAgentTotalPrice(phone);
+			Double charge = orderService.queryAgentTotalCharge(phone);
+			Double total = orderService.queryAgentTotalPrice(phone);
 			User user = userService.queryByPhone(phone);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
 		}catch(Exception e) {
@@ -94,19 +94,19 @@ public class HomeController {
 	@ResponseBody
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
 		try {
-			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			int daifahuo = orderService.queryCountByStatus(phone,null,Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
-			int tuihuozhong = orderService.queryCountByStatus(phone,null,-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
-			int sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, phone);
-			int nostock = productService.queryNoStockCount(phone);
-			int totalSellers = agentSellerService.queryCountByPhone(phone,null);
-			double chargepercent  = 0d;
-			List<AgentSeller> ass =  agentSellerService.queryByAgent(phone);
+			User user = LoginUserUtil.getCurrentUser(request);
+			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
+			Integer sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, user.getUserPhone());
+			Integer nostock = productService.queryNoStockCount(user.getUserPhone());
+			Integer totalSellers = agentSellerService.queryCountByPhone(user.getUserPhone(),null);
+			Double chargepercent  = 0d;
+			List<AgentSeller> ass =  agentSellerService.queryByAgent(user.getUserPhone());
 			if ( null != ass && ass.size() > 0 ) {
 				chargepercent = ass.get(0).getChargePercent();
 			}
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", 
-					new AgentHome(daifahuo, tuihuozhong, sellproduct, nostock, totalSellers, chargepercent));
+					new AgentHome(daifahuo, tuihuozhong, sellproduct, nostock, totalSellers, chargepercent,user.getCategory()));
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"查询失败", e.getMessage());
