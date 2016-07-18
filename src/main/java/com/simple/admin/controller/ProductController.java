@@ -17,10 +17,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.model.AgentSeller;
 import com.simple.model.PageResult;
 import com.simple.model.Product;
 import com.simple.model.ProductImage;
+import com.simple.model.ShopList;
+import com.simple.model.ShopProduct;
+import com.simple.model.User;
+import com.simple.service.AgentSellerService;
 import com.simple.service.ProductService;
+import com.simple.service.UserService;
 
 @Controller
 @RequestMapping(value = "/product")
@@ -30,6 +36,70 @@ public class ProductController {
 
 	@Autowired
 	ProductService productService;
+	@Autowired
+	UserService userService;
+	@Autowired
+	AgentSellerService agentSellerService;
+	
+	@RequestMapping(value="productOwners",method=RequestMethod.GET)
+	@ResponseBody
+	public String productPhonelist(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User seller = LoginUserUtil.getCurrentUser(request);
+			List<String> owners = productService.queryProductOwners(pageIndex, pageSize);
+			List<ShopList> shoplist = null;
+			if ( null != owners ) {
+				shoplist = new ArrayList<ShopList>();
+				for ( int i = 0 ; i < owners.size() ; i ++) {
+					String owner = owners.get(i);
+					User user = userService.queryByPhone(owner);
+					ShopList sl = new ShopList();
+					sl.setOwner(owner);
+					sl.setOwnerName(user.getWeChatNo());
+					List<String> ownerlist = new ArrayList<String>();
+					ownerlist.add(owner);
+					int productCount = productService.queryCount(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE);
+					sl.setProductCount(productCount);
+					List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, 1, 2);
+					boolean isJoin = false;
+					if ( null != products) {
+						List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
+						for ( int j = 0 ; j < products.size() ; j ++) {
+							Product p = products.get(j);
+							ShopProduct sp = new ShopProduct();
+							sp.setProductName(p.getName());
+							sp.setPrice(p.getPrice());
+							//查询设置的提成
+							List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
+							if ( null != ass && ass.size() > 0) {
+								isJoin  = true;
+							}else {
+								ass = agentSellerService.queryListByPhone(owner, null, 1, 1);
+							}
+							double syscharge = agentSellerService.queryCharge();
+							double percent = 100;
+							if (null != ass && ass.size() > 0) {
+								AgentSeller as = ass.get(0);
+								percent = as.getChargePercent();
+							}
+							sp.setCharge(p.getPrice()*(percent-syscharge)/100.00);
+							shopProducts.add(sp);
+						}
+					}
+					sl.setJoin(isJoin);
+					shoplist.add(sl);
+				}
+			}
+			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", shoplist);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+		}
+	}
+	
+	
+	
 	
 	@RequestMapping(value="list",method=RequestMethod.GET)
 	@ResponseBody

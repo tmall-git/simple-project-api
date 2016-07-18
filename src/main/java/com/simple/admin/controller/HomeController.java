@@ -182,35 +182,4 @@ public class HomeController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"失败", null);
 		}
 	}
-	
-	private boolean checkUserUnique(String statement, Map<String, Object> params) {
-		User user = userService.selectOne(statement, params);
-		if(user != null){
-			if(StringUtils.isNotEmpty(user.getUserPhone())){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private String getValidateCode(){
-		int[] chars = {0,1,2,3,4,5,6,7,8,9};
-		String a = new String();
-		for (int i = 0; i < 6; i++) {
-			a += chars[(int)(Math.random()*10)];
-		}
-		return a;
-	}
-	
-	public static void main(String[] args) {
-		int[] chars = {0,1,2,3,4,5,6,7,8,9};
-		long sysTime = System.currentTimeMillis();
-		System.out.println();
-		String a = new String();
-		for (int i = 0; i < 6; i++) {
-			a += chars[(int)(Math.random()*10)];
-		}
-		System.out.println(System.currentTimeMillis() - sysTime);
-		System.out.println(a);
-	}
 }
