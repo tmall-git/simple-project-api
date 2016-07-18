@@ -94,7 +94,7 @@ public class ProductController {
 		}
 		catch (Exception e){
 			e.printStackTrace();
-			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品错误:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
