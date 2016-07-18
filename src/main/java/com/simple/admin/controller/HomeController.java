@@ -1,5 +1,6 @@
 package com.simple.admin.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.github.pagehelper.PageInfo;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
-import com.simple.model.SellerJoinVO;
 import com.simple.model.SellerListVO;
-import com.simple.model.SellerMainVO;
+import com.simple.model.SellerMain;
 import com.simple.model.User;
 import com.simple.model.UserSellCount;
 import com.simple.service.AgentSellerService;
@@ -47,14 +46,43 @@ public class HomeController {
 	@Autowired
 	AgentSellerService agentSellerService;
 	
-	@RequestMapping(value = "sellCount",method=RequestMethod.GET)
+	/**
+	 * 代理销售额
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentSellCount",method=RequestMethod.GET)
 	@ResponseBody
-	public String register(HttpServletRequest request, HttpServletResponse response) {
+	public String agentSellCount(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			double charge = orderService.queryTotalCharge(phone);
-			double total = orderService.queryTotalPrice(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge));
+			double charge = orderService.queryAgentTotalCharge(phone);
+			double total = orderService.queryAgentTotalPrice(phone);
+			User user = userService.queryByPhone(phone);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
+		}catch(Exception e) {
+			log.error("查询失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"查询失败", null);
+		}
+	}
+	
+	/**
+	 * 代销销售额
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "sellerSellCount",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerSellCount(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
+			Double charge = orderService.querySellerTotalCharge(null,phone);
+			Double total = orderService.querySellerTotalPrice(null,phone);
+			User user = userService.queryByPhone(phone);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -67,11 +95,11 @@ public class HomeController {
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			int daifahuo = orderService.queryCountByStatus(phone,Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
-			int tuihuozhong = orderService.queryCountByStatus(phone,-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
+			int daifahuo = orderService.queryCountByStatus(phone,null,Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+			int tuihuozhong = orderService.queryCountByStatus(phone,null,-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
 			int sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, phone);
 			int nostock = productService.queryNoStockCount(phone);
-			int totalSellers = agentSellerService.queryCountByAgent(phone);
+			int totalSellers = agentSellerService.queryCountByPhone(phone,null);
 			double chargepercent  = 0d;
 			List<AgentSeller> ass =  agentSellerService.queryByAgent(phone);
 			if ( null != ass && ass.size() > 0 ) {
@@ -85,65 +113,45 @@ public class HomeController {
 		}
 	}
 	
-	@RequestMapping(value = "sellerMainHead",method=RequestMethod.GET)
+	@RequestMapping(value = "sellerMain",method=RequestMethod.GET)
 	@ResponseBody
-	public String sellerMainHead(HttpServletRequest request, HttpServletResponse response) {
+	public String sellerMainList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			SellerMainVO vo = userService.toSellerMainHead(user);
-			vo.setBalance(user.getBalance());
-			vo.setWithdrawAmount(user.getBalance());
-			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", vo);
-			log.debug(result);
-			return result;
-		}catch(Exception e) {
-			log.error(e.getMessage(),e);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
-		}
-	}
-	
-	@RequestMapping(value = "sellerMainList",method=RequestMethod.GET)
-	@ResponseBody
-	public String sellerMainList(HttpServletRequest request, HttpServletResponse response) {
-		try {
-			String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
-			String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
-			Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
-			Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
-			User user = LoginUserUtil.getCurrentUser(request);
-			PageInfo<SellerListVO> page = userService.toSellerMainList(user.getUserPhone(), pageIndex, pageSize);
-			List<SellerListVO> pageList = page.getList();
-			Long totalCount = page.getTotal();
-			Map<String, Object> data = new HashMap<String, Object>();
-			data.put("datas", pageList);
-			data.put("totalCount", totalCount);
-			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", data);
-			log.debug(result);
-			return result;
-		}catch(Exception e) {
-			log.error(e.getMessage(),e);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
-		}
-	}
-	
-	@RequestMapping(value = "sellerJoinList",method=RequestMethod.GET)
-	@ResponseBody
-	public String sellerJoinList(HttpServletRequest request, HttpServletResponse response) {
-		try {
-			String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
-			String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
-			Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
-			Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
-			User user = LoginUserUtil.getCurrentUser(request);
-			PageInfo<SellerJoinVO> page = agentSellerService.getSellerJoinList(user.getUserPhone(), pageIndex, pageSize);
-			List<SellerJoinVO> pageList = page.getList();
-			Long totalCount = page.getTotal();
-			Map<String, Object> data = new HashMap<String, Object>();
-			data.put("datas", pageList);
-			data.put("totalCount", totalCount);
-			String result = AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", data);
-			log.debug(result);
-			return result;
+			//待发货
+			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+			//退货中
+			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
+			
+			//String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
+			//String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
+			//Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
+			//Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
+			//代销店铺总数
+			int count = agentSellerService.queryCountByPhone(null, user.getUserPhone());
+			List<AgentSeller> asllers = agentSellerService.queryListByPhone(null, user.getUserPhone(),pageIndex,pageSize);
+			SellerMain sm = new SellerMain();
+			sm.setDaifahuo(daifahuo);
+			sm.setTuihuozhong(tuihuozhong);
+			sm.setShopCount(count);
+			if ( null != asllers && asllers.size() > 0 ) {
+				List<SellerListVO> pageList = new ArrayList<SellerListVO>();
+				for (int i = 0 ; i < asllers.size() ; i ++)  {
+					AgentSeller as = asllers.get(i);
+					Double charge = orderService.querySellerTotalCharge(as.getAgentPhone(),as.getSellerPhone());
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					SellerListVO sv = new SellerListVO();
+					sv.setDealCount(orderCount);
+					sv.setProductCount(productCount);
+					sv.setSellerAmount(charge);
+					sv.setUserPhone(as.getAgentPhone());
+					sv.setWechatName(as.getAgentName());
+					pageList.add(sv);
+				}
+				sm.setShops(pageList);
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", sm);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
