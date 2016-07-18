@@ -56,6 +56,7 @@ public class ProductController {
 					ShopList sl = new ShopList();
 					sl.setOwner(owner);
 					sl.setOwnerName(user.getWeChatNo());
+					sl.setZhuying(user.getCategory());
 					List<String> ownerlist = new ArrayList<String>();
 					ownerlist.add(owner);
 					int productCount = productService.queryCount(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE);
@@ -69,6 +70,7 @@ public class ProductController {
 							ShopProduct sp = new ShopProduct();
 							sp.setProductName(p.getName());
 							sp.setPrice(p.getPrice());
+							sp.setImage(p.getFirstImg());
 							//查询设置的提成
 							List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
 							if ( null != ass && ass.size() > 0) {
@@ -85,6 +87,7 @@ public class ProductController {
 							sp.setCharge(p.getPrice()*(percent-syscharge)/100.00);
 							shopProducts.add(sp);
 						}
+						sl.setProducts(shopProducts);
 					}
 					sl.setJoin(isJoin);
 					shoplist.add(sl);
