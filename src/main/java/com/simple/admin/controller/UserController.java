@@ -138,15 +138,14 @@ public class UserController {
 			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
 			String prmWechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo");
 			String prmUserNick = AjaxWebUtil.getRequestParameter(request,"userNick");
+			String userName = AjaxWebUtil.getRequestParameter(request,"userName");
 			String prmCategory = AjaxWebUtil.getRequestParameter(request,"category");
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put("userPhone", userPhone);
 			User user = userService.selectOne("user.selectOne", params);
 			user.setWeChatNo(prmWechatNo);
 			user.setUserNick(prmUserNick);
-			if(StringUtils.isNotEmpty(prmCategory)){
-				user.setCategory(prmCategory);
-			}
+			user.setUserName(userName);
 			userService.update(user);
 			LoginUserUtil.setCurrentUser(request, user);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"成功", null);

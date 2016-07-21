@@ -131,6 +131,8 @@ public class AgentSellerController {
 				isallow = true;
 			}
 			agentSellerService.updateAllow(owner.getUserPhone(), null, isallow);
+			owner.setAllowSell(allow);
+			LoginUserUtil.setCurrentUser(request, owner);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功", null);
 		}catch(Exception e) {
 			log.error("设置失败",e);
@@ -150,6 +152,8 @@ public class AgentSellerController {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
 			agentSellerService.updatePercent(owner.getUserPhone(), percent);
+			owner.setChargePrecent(percent);
+			LoginUserUtil.setCurrentUser(request, owner);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功", null);
 		}catch(Exception e) {
 			log.error("设置失败",e);
@@ -158,6 +162,46 @@ public class AgentSellerController {
 		}
 	}
 	
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentSellerPercent",method=RequestMethod.GET)
+	@ResponseBody
+	public String agentSellerPercent(String seller,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			List<AgentSeller> ass = agentSellerService.queryListByPhone(owner.getUserPhone(), seller, 1, 1);
+			double precent = 0.00;
+			if ( null != ass && ass.size() > 0) {
+				precent = ass.get(0).getChargePercent();
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", precent);
+		}catch(Exception e) {
+			log.error("查询失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"查询失败:"+e.getLocalizedMessage(), null);
+		}
+	}
 	
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentSellerPercentSet",method=RequestMethod.POST)
+	@ResponseBody
+	public String agentSellerPercentSet(String seller,double percent,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			agentSellerService.updatePercent(owner.getUserPhone(), seller, percent);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功", null);
+		}catch(Exception e) {
+			log.error("设置失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"设置失败:"+e.getLocalizedMessage(), null);
+		}
+	}
 	
 }

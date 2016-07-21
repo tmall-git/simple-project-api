@@ -1,7 +1,9 @@
 package com.simple.admin.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.common.util.DateUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
 import com.simple.model.AgentSellerMain;
@@ -78,7 +81,7 @@ public class HomeController {
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
 			Double charge = orderService.querySellerTotalCharge(null,phone);
-			Double total = orderService.querySellerTotalPrice(null,phone);
+			Double total = orderService.querySellerTotalPrice(null,phone,null,null);
 			User user = userService.queryByPhone(phone);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
 		}catch(Exception e) {
@@ -93,8 +96,10 @@ public class HomeController {
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
-			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
+			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND, 
+					-1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
+			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,
+					-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1,null,null);
 			Integer sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, user.getUserPhone());
 			Integer nostock = productService.queryNoStockCount(user.getUserPhone());
 			Integer totalSellers = agentSellerService.queryCountByPhone(user.getUserPhone(),null);
@@ -117,14 +122,11 @@ public class HomeController {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
 			//待发货
-			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND, 
+					-1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
 			//退货中
-			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1);
-			
-			//String prmPageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
-			//String prmPageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
-			//Integer pageIndex = Integer.parseInt(prmPageIndex) <= 0 ? 1 : StringUtils.isEmpty(prmPageIndex) ? 1 : Integer.parseInt(prmPageIndex);
-			//Integer pageSize = StringUtils.isEmpty(prmPageSize) ? 5 : Integer.parseInt(prmPageSize);
+			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),
+					-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1,null,null);
 			//代销店铺总数
 			int count = agentSellerService.queryCountByPhone(null, user.getUserPhone());
 			List<AgentSeller> asllers = agentSellerService.queryListByPhone(null, user.getUserPhone(),pageIndex,pageSize);
@@ -136,9 +138,11 @@ public class HomeController {
 					if (!as.isAllow()) {
 						continue;
 					}
-					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone());
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
-					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),
+							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
+					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),
+							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
 					SellerListVO sv = new SellerListVO();
 					sv.setDealCount(orderCount);
 					sv.setProductCount(productCount);
@@ -170,8 +174,9 @@ public class HomeController {
 				pageList = new ArrayList<AgentSellerMain>();
 				for (int i = 0 ; i < asllers.size() ; i ++)  {
 					AgentSeller as = asllers.get(i);
-					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone());
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),
+							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
 					AgentSellerMain asm = new AgentSellerMain();
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);
@@ -184,6 +189,127 @@ public class HomeController {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
+	}
+	
+	@RequestMapping(value = "sellerBussinessHeader",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerBussinessHeader(String seller,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			Map result = new HashMap();
+			result.put("weChat", owner.getWeChatNo());
+			result.put("phone", owner.getUserPhone());
+			result.put("name", owner.getUserName());
+			Double charge = orderService.querySellerTotalPrice(owner.getUserPhone(),seller,null,null);
+			result.put("totalSell", charge==null?0d:charge);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	/**
+	 * 代销累计
+	 * @param seller
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "sellerAllBussiness",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerAllBussinessBody(String seller,HttpServletRequest request,HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,null,null);
+			//总带看数
+			List<AgentSeller> agentSeller = agentSellerService.queryListByPhone(owner.getUserPhone(), seller, 1, 1);
+			int totalSellerWatchCount = 0;
+			if ( null != agentSeller && agentSeller.size() > 0 ) {
+				totalSellerWatchCount = agentSeller.get(0).getWatchCount();
+			}
+			result.put("totalWatchCount", totalSellerWatchCount);
+			//带看数占比
+			Integer totalWatchCount = agentSellerService.querySumWatchCount(owner.getUserPhone());
+			if ( null == totalWatchCount) {
+				totalWatchCount = 1;
+			}
+			result.put("totalWatchPercent", (totalSellerWatchCount/totalWatchCount)*100.00);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	
+	/**
+	 * 代销周累计
+	 * @param seller
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "sellerWeekBussiness",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerWeekBussiness(String seller,HttpServletRequest request,HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowWeekBegin(),DateUtil.getNowWeekEnd());
+			//TODO 总带看数
+			//TODO 带看数占比 建议不做，带看统计不要跟时间来统计，数据量太大
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	/**
+	 * 代销累计
+	 * @param seller
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "sellerMonthBussiness",method=RequestMethod.GET)
+	@ResponseBody
+	public String sellerMonthBussiness(String seller,HttpServletRequest request,HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	private Map getSellerBussinessMap(String owner,String seller,HttpServletRequest request,String begin,String end) {
+		Map result = new HashMap();
+		
+		//总代销额
+		Double totalSellercharge = orderService.querySellerTotalPrice(owner,seller,begin,end);
+		result.put("totalSell",totalSellercharge==null?0d:totalSellercharge);
+		//销售额团队占比
+		Double totalCharge = orderService.querySellerTotalPrice(owner,null,begin,end);
+		if ( null == totalCharge) {
+			totalCharge = 1.00;
+		}
+		result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
+		
+		//订单总数
+		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1, -1, 
+				-1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
+		result.put("totalOrderCount", totalSellerOrderCount==null?0:totalSellerOrderCount);
+		//订单总数团队占比
+		Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
+				-1, -1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
+		if ( null == totalOrderCount) {
+			totalOrderCount = 1;
+		}
+		result.put("totalOrderCountPercent", (totalSellerOrderCount/totalOrderCount)*100.00);
+		return result;
 	}
 	
 }
