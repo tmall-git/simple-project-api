@@ -1,14 +1,11 @@
 package com.simple.admin.controller;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +19,7 @@ import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
+import com.simple.model.AgentSellerMain;
 import com.simple.model.SellerListVO;
 import com.simple.model.SellerMain;
 import com.simple.model.User;
@@ -131,14 +129,14 @@ public class HomeController {
 			int count = agentSellerService.queryCountByPhone(null, user.getUserPhone());
 			List<AgentSeller> asllers = agentSellerService.queryListByPhone(null, user.getUserPhone(),pageIndex,pageSize);
 			SellerMain sm = new SellerMain();
-			sm.setDaifahuo(daifahuo);
-			sm.setTuihuozhong(tuihuozhong);
-			sm.setShopCount(count);
 			if ( null != asllers && asllers.size() > 0 ) {
 				List<SellerListVO> pageList = new ArrayList<SellerListVO>();
 				for (int i = 0 ; i < asllers.size() ; i ++)  {
 					AgentSeller as = asllers.get(i);
-					Double charge = orderService.querySellerTotalCharge(as.getAgentPhone(),as.getSellerPhone());
+					if (!as.isAllow()) {
+						continue;
+					}
+					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone());
 					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
 					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
 					SellerListVO sv = new SellerListVO();
@@ -151,10 +149,41 @@ public class HomeController {
 				}
 				sm.setShops(pageList);
 			}
+			sm.setDaifahuo(daifahuo);
+			sm.setTuihuozhong(tuihuozhong);
+			sm.setShopCount(count);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", sm);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
 	}
+	
+	@RequestMapping(value = "agentSeller",method=RequestMethod.GET)
+	@ResponseBody
+	public String agentSeller(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<AgentSeller> asllers = agentSellerService.queryListByPhone(user.getUserPhone(),null, pageIndex,pageSize);
+			List<AgentSellerMain> pageList = null;
+			if ( null != asllers && asllers.size() > 0 ) {
+				pageList = new ArrayList<AgentSellerMain>();
+				for (int i = 0 ; i < asllers.size() ; i ++)  {
+					AgentSeller as = asllers.get(i);
+					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone());
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					AgentSellerMain asm = new AgentSellerMain();
+					asm.setOrderCount(orderCount==null?0:orderCount);
+					asm.setTotalSell(charge==null?0d:charge);
+					asm.setWatchCount(as.getWatchCount());
+					pageList.add(asm);
+				}
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", pageList);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
 }

@@ -108,11 +108,53 @@ public class AgentSellerController {
 			result.put("sellers", totalSellers == null ? 0 : totalSellers);
 			result.put("percent", owner.getChargePrecent());
 			result.put("allowSell", owner.getAllowSell());
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"取消成功", null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"取消成功", result);
 		}catch(Exception e) {
 			log.error("取消失败",e);
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"取消失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentAllowed",method=RequestMethod.POST)
+	@ResponseBody
+	public String agentSetPage(int allow,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			boolean isallow = false;
+			if (allow == 1 ) {
+				isallow = true;
+			}
+			agentSellerService.updateAllow(owner.getUserPhone(), null, isallow);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功", null);
+		}catch(Exception e) {
+			log.error("设置失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"设置失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentPercent",method=RequestMethod.POST)
+	@ResponseBody
+	public String agentPercent(double percent,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			agentSellerService.updatePercent(owner.getUserPhone(), percent);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功", null);
+		}catch(Exception e) {
+			log.error("设置失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"设置失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	

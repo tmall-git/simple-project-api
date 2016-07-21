@@ -29,4 +29,5 @@ public class Constant {
 	
 	public static final double CHARGE_DEFAULT = 30.00d;
 	
+	
 }

@@ -58,7 +58,7 @@ public class ProductController {
 					String owner = owners.get(i);
 					User user = userService.queryByPhone(owner);
 					//如果该用户不允许代销，则忽略
-					if (user.getAllowSell()!=1) {
+					if (!user.isAllow()) {
 						continue;
 					}
 					//查询设置的提成
@@ -68,7 +68,7 @@ public class ProductController {
 					if ( null != ass && ass.size() > 0) {
 						//如果设置了不允许代销，则不显示
 						AgentSeller as0 = ass.get(0);
-						if (as0.getAllowSell()!=1) {
+						if (!as0.isAllow()) {
 							continue;
 						}
 						isJoin  = true;
