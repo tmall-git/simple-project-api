@@ -27,4 +27,6 @@ public class Constant {
 	public static final int ORDER_PAY_STATUS_PAY = 1;
 	public static final int ORDER_PAY_STATUS_FAIL = 2;
 	
+	public static final double CHARGE_DEFAULT = 30.00d;
+	
 }

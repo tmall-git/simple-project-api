@@ -53,9 +53,27 @@ public class ProductController {
 			DecimalFormat df=new DecimalFormat(".##");
 			if ( null != owners ) {
 				shoplist = new ArrayList<ShopList>();
+				double syscharge = agentSellerService.queryCharge();
 				for ( int i = 0 ; i < owners.size() ; i ++) {
 					String owner = owners.get(i);
 					User user = userService.queryByPhone(owner);
+					//如果该用户不允许代销，则忽略
+					if (user.getAllowSell()!=1) {
+						continue;
+					}
+					//查询设置的提成
+					boolean isJoin = false;
+					double percent = user.getChargePrecent();
+					List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
+					if ( null != ass && ass.size() > 0) {
+						//如果设置了不允许代销，则不显示
+						AgentSeller as0 = ass.get(0);
+						if (as0.getAllowSell()!=1) {
+							continue;
+						}
+						isJoin  = true;
+						percent = as0.getChargePercent();
+					}
 					ShopList sl = new ShopList();
 					sl.setOwner(owner);
 					sl.setOwnerName(user.getWeChatNo());
@@ -65,7 +83,6 @@ public class ProductController {
 					int productCount = productService.queryCount(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE);
 					sl.setProductCount(productCount);
 					List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, 1, 2);
-					boolean isJoin = false;
 					if ( null != products) {
 						List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
 						for ( int j = 0 ; j < products.size() ; j ++) {
@@ -74,19 +91,6 @@ public class ProductController {
 							sp.setProductName(p.getName());
 							sp.setPrice(df.format(p.getPrice()));
 							sp.setImage(p.getFirstImg());
-							//查询设置的提成
-							List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
-							if ( null != ass && ass.size() > 0) {
-								isJoin  = true;
-							}else {
-								ass = agentSellerService.queryListByPhone(owner, null, 1, 1);
-							}
-							double syscharge = agentSellerService.queryCharge();
-							double percent = syscharge;
-							if (null != ass && ass.size() > 0) {
-								AgentSeller as = ass.get(0);
-								percent = as.getChargePercent();
-							}
 							double chargedouble = p.getPrice()*(percent-syscharge)/100.00;
 							if (chargedouble<0) {
 								chargedouble = 0d;

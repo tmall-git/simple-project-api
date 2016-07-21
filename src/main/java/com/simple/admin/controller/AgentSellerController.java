@@ -1,6 +1,8 @@
 package com.simple.admin.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -90,5 +92,29 @@ public class AgentSellerController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"取消失败:"+e.getLocalizedMessage(), null);
 		}
 	}
+	
+	/**
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentSetPage",method=RequestMethod.GET)
+	@ResponseBody
+	public String agentSetPage(HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			Integer totalSellers = agentSellerService.queryCountByPhone(owner.getUserPhone(),null);
+			Map result = new HashMap();
+			result.put("sellers", totalSellers == null ? 0 : totalSellers);
+			result.put("sellers", totalSellers == null ? 0 : totalSellers);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"取消成功", null);
+		}catch(Exception e) {
+			log.error("取消失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"取消失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	
 	
 }

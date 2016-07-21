@@ -157,29 +157,4 @@ public class HomeController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
 		}
 	}
-	
-	@RequestMapping(value = "modifyUser",method=RequestMethod.POST)
-	@ResponseBody
-	public String modifyUser(HttpServletRequest request, HttpServletResponse response) {
-		try {
-			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
-			String prmWechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo");
-			String prmUserNick = AjaxWebUtil.getRequestParameter(request,"userNick");
-			String prmCategory = AjaxWebUtil.getRequestParameter(request,"category");
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("userPhone", userPhone);
-			User user = userService.selectOne("user.selectOne", params);
-			user.setWeChatNo(prmWechatNo);
-			user.setUserNick(prmUserNick);
-			if(StringUtils.isNotEmpty(prmCategory)){
-				user.setCategory(prmCategory);
-			}
-			userService.update(user);
-			LoginUserUtil.setCurrentUser(request, user);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"成功", null);
-		}catch(Exception e) {
-			log.error(e.getMessage(),e);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"失败", null);
-		}
-	}
 }

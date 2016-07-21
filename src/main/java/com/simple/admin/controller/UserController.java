@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.MD5Util;
@@ -72,6 +73,7 @@ public class UserController {
 			u.setUserPhone(userPhone);
 			u.setWeChatNo(wechatNo);
 			u.setPassword(mPassword);
+			u.setChargePrecent(Constant.CHARGE_DEFAULT);
 			userService.insert(u);
 			LoginUserUtil.setCurrentUser(request, u);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"注册成功", null);
