@@ -53,12 +53,12 @@ public class AgentSellerController {
 			if (count > 0 ) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
 			}
+			User user = userService.queryByPhone(owner);
 			AgentSeller as = new AgentSeller();
 			as.setSellerPhone(seller.getUserPhone());
 			as.setSellerName(seller.getWeChatNo());
 			as.setAgentPhone(owner);
-			as.setChargePercent(0.00);
-			User user = userService.queryByPhone(owner);
+			as.setChargePercent(user.getChargePrecent());
 			as.setAgentName(user.getWeChatNo());
 			agentSellerService.add(as);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
@@ -106,7 +106,8 @@ public class AgentSellerController {
 			Integer totalSellers = agentSellerService.queryCountByPhone(owner.getUserPhone(),null);
 			Map result = new HashMap();
 			result.put("sellers", totalSellers == null ? 0 : totalSellers);
-			result.put("sellers", totalSellers == null ? 0 : totalSellers);
+			result.put("percent", owner.getChargePrecent());
+			result.put("allowSell", owner.getAllowSell());
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"取消成功", null);
 		}catch(Exception e) {
 			log.error("取消失败",e);
