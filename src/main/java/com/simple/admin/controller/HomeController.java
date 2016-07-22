@@ -321,7 +321,10 @@ public class HomeController {
 		
 		//总代销额
 		Double totalSellercharge = orderService.querySellerTotalPrice(owner,seller,begin,end);
-		result.put("totalSell",totalSellercharge==null?0d:totalSellercharge);
+		if ( null == totalSellercharge ) {
+			totalSellercharge = 0d;
+		}
+		result.put("totalSell",totalSellercharge);
 		if (needsPercent) {
 			//销售额团队占比
 			Double totalCharge = orderService.queryAgentTotalPrice(owner,begin,end);
@@ -333,7 +336,8 @@ public class HomeController {
 		//订单总数
 		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1, -1, 
 				-1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
-		result.put("totalOrderCount", totalSellerOrderCount==null?0:totalSellerOrderCount);
+		if (totalSellerOrderCount==null) totalSellerOrderCount=0;
+		result.put("totalOrderCount", totalSellerOrderCount);
 		if (needsPercent) {
 			//订单总数团队占比
 			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
