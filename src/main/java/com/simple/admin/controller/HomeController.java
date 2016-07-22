@@ -61,7 +61,7 @@ public class HomeController {
 			Double charge = orderService.queryAgentTotalCharge(phone,null,null);
 			Double total = orderService.queryAgentTotalPrice(phone,null,null);
 			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance(),phone));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -83,7 +83,7 @@ public class HomeController {
 			Double charge = orderService.querySellerTotalCharge(null,phone);
 			Double total = orderService.querySellerTotalPrice(null,phone,null,null);
 			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance(),phone));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -227,10 +227,11 @@ public class HomeController {
 	public String sellerBussinessHeader(String seller,HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
+			User sellerUser = userService.queryByPhone(seller);
 			Map result = new HashMap();
-			result.put("weChat", owner.getWeChatNo());
-			result.put("phone", owner.getUserPhone());
-			result.put("name", owner.getUserName());
+			result.put("weChat", sellerUser.getWeChatNo());
+			result.put("phone", sellerUser.getUserPhone());
+			result.put("name", sellerUser.getUserName());
 			Double charge = orderService.querySellerTotalPrice(owner.getUserPhone(),seller,null,null);
 			result.put("totalSell", charge==null?0d:charge);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
@@ -389,11 +390,15 @@ public class HomeController {
 			User seller = LoginUserUtil.getCurrentUser(request);
 			Map result = new HashMap();
 			Map shopResult = getSellerBussinessMap(owner,null,request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),false);
+			//总带看数
+			Integer watchcount = agentSellerService.querySumWatchCount(owner);
+			shopResult.put("watchCount", watchcount==null?0:watchcount);
 			result.put("shop", shopResult);
 			Map sellerResult = getSellerBussinessMap(owner,seller.getUserPhone(),request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),false);
 			result.put("seller", sellerResult);
 			Map weekResult = getSellerBussinessMap(owner,seller.getUserPhone(),request,DateUtil.getNowWeekBegin(),DateUtil.getNowWeekEnd(),false);
 			result.put("week", weekResult);
+			result.put("month", DateUtil.getNowMonth());
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);

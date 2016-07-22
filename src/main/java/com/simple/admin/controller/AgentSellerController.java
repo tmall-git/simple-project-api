@@ -96,6 +96,30 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------》取消代销
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "cancelSeller",method=RequestMethod.POST)
+	@ResponseBody
+	public String cancelSeller(String seller,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owner = LoginUserUtil.getCurrentUser(request);
+			List<AgentSeller> ass = agentSellerService.queryListByPhone(owner.getUserPhone(), seller, 1, 1);
+			if ( null != ass && ass.size() > 0 ) {
+				AgentSeller as = ass.get(0);
+				agentSellerService.delete(as);
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"取消成功", null);
+		}catch(Exception e) {
+			log.error("取消失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"取消失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
 	 * 代理------》设置代销
 	 * @param request
 	 * @param response

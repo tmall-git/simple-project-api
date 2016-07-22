@@ -107,7 +107,7 @@ public class ProductController {
 			User seller = LoginUserUtil.getCurrentUser(request);
 			User user = userService.queryByPhone(owner);
 			Map map = getAgentSellerPercent(user,seller);
-			if (isAllow(map)) {
+			if (!isAllow(map)) {
 				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"该代理禁止代销啦", null);
 			}
 			List<String> ownerlist = new ArrayList<String>();
@@ -183,6 +183,7 @@ public class ProductController {
 				}
 				sp.setCharge(df.format(chargedouble));
 				sp.setStock(p.getStock());
+				sp.setId(p.getId());
 				shopProducts.add(sp);
 			}
 			return shopProducts;
@@ -214,11 +215,13 @@ public class ProductController {
 	@ResponseBody
 	public String info(Integer id,HttpServletRequest request, HttpServletResponse response){
 		try {
-			Product product = productService.getById(id);
+			Product product = productService.getById(id,false);
 			ProductImage pi = productService.getImage(id);
 			if ( null != pi ) {
 				product.setThumbnail(pi.getImage());
 			}
+			User owner = userService.queryByPhone(product.getOwner());
+			product.setCharge(product.getPrice()*owner.getChargePrecent()/100.00);
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){
@@ -292,7 +295,7 @@ public class ProductController {
 			//String productStatus = AjaxWebUtil.getRequestParameter(request,"productStatus");
 			String imges = AjaxWebUtil.getRequestParameter(request,"images");
 			String firstImg = AjaxWebUtil.getRequestParameter(request,"firstImg");
-			Product p = productService.getById(id);
+			Product p = productService.getById(id,false);
 			p.setName(name);
 			p.setStock(Integer.parseInt(stock));
 			p.setPrice(Double.parseDouble(price));

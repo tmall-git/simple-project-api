@@ -146,6 +146,7 @@ public class UserController {
 			user.setWeChatNo(prmWechatNo);
 			user.setUserNick(prmUserNick);
 			user.setUserName(userName);
+			user.setCategory(prmCategory);
 			userService.update(user);
 			LoginUserUtil.setCurrentUser(request, user);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"成功", null);
