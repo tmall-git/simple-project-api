@@ -27,7 +27,7 @@ public class OrderController {
 	OrderService orderService;
 	
 	/**
-	 * 待发货
+	 * 代理------》待发货
 	 * @param pageIndex
 	 * @param pageSize
 	 * @param request
@@ -50,7 +50,7 @@ public class OrderController {
 	}
 	
 	/**
-	 * 已发货
+	 * 代理------》已发货
 	 * @param pageIndex
 	 * @param pageSize
 	 * @param request
@@ -70,7 +70,7 @@ public class OrderController {
 	}
 	
 	/**
-	 * 已发货
+	 * 代理------》已发货
 	 * @param pageIndex
 	 * @param pageSize
 	 * @param request
@@ -90,7 +90,7 @@ public class OrderController {
 	}
 	
 	/**
-	 * 待处理
+	 * 代理------》待处理
 	 * @param pageIndex
 	 * @param pageSize
 	 * @param request
@@ -108,6 +108,92 @@ public class OrderController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
 		}
 	}
+	
+	
+	/**
+	 * 代销------》待发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("sellertoSendList")
+	@ResponseBody
+	public String sellertoSendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
+			//String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	
+	}
+	
+	/**
+	 * 代销------》已发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("sellerSendList")
+	@ResponseBody
+	public String sellerSendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(null, user.getUserPhone(), Constant.ORDER_STATUS_SEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 代销------》已发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("sellerFinishedList")
+	@ResponseBody
+	public String sellerFinishedList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_FINISHED, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 代销------》待处理
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("sellerTodoList")
+	@ResponseBody
+	public String sellerTodoList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryToDoList(null,user.getUserPhone(),  null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	
 	
 	@RequestMapping("orderDetail")
 	@ResponseBody
