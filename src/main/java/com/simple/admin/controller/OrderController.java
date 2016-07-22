@@ -1,5 +1,7 @@
 package com.simple.admin.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
+import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.Order;
 import com.simple.model.PageResult;
 import com.simple.model.User;
@@ -23,20 +26,87 @@ public class OrderController {
 	@Autowired
 	OrderService orderService;
 	
-	@RequestMapping("orderList")
+	/**
+	 * 待发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("toSendList")
 	@ResponseBody
-	public String getOrderList(HttpServletRequest request, HttpServletResponse response){
-		String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
-		String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
-		String prmOrderStatus = AjaxWebUtil.getRequestParameter(request,"orderStatus");
-		User user = (User)request.getSession().getAttribute(Constant.CURRENT_USER);
-		String userPhone = user.getUserPhone();
-		Integer orderStatus = StringUtils.isEmpty(prmOrderStatus) ? null : Integer.valueOf(prmOrderStatus);
-		PageResult result = orderService.getOrdersLists(userPhone, orderStatus, Integer.parseInt(pageIndex), Integer.parseInt(pageSize));
-		if(result == null){
-			return AjaxWebUtil.sendAjaxResponse(request, response, false, "该用户没有订单", null);
+	public String toSendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
+			//String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_TOSEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
 		}
-		return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单列表查询成功", result);
+	
+	}
+	
+	/**
+	 * 已发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("sendList")
+	@ResponseBody
+	public String sendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_SEND, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 已发货
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("finishedList")
+	@ResponseBody
+	public String finishedList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_FINISHED, -1, -1, Constant.ORDER_PAY_STATUS_PAY, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 待处理
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping("todoList")
+	@ResponseBody
+	public String todoList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			List<Order> orderList = orderService.queryToDoList(user.getUserPhone(), null, null, null, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
+		}catch(Exception e) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
+		}
 	}
 	
 	@RequestMapping("orderDetail")

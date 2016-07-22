@@ -1,9 +1,10 @@
 package com.simple.admin.controller;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,14 @@ public class ProductController {
 	@Autowired
 	AgentSellerService agentSellerService;
 	
+	/**
+	 * 所有代理（有商品的用户）
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value="productOwners",method=RequestMethod.GET)
 	@ResponseBody
 	public String productPhonelist(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
@@ -50,29 +59,16 @@ public class ProductController {
 			User seller = LoginUserUtil.getCurrentUser(request);
 			List<String> owners = productService.queryProductOwners(pageIndex, pageSize);
 			List<ShopList> shoplist = null;
-			DecimalFormat df=new DecimalFormat(".##");
+			
 			if ( null != owners ) {
 				shoplist = new ArrayList<ShopList>();
-				double syscharge = agentSellerService.queryCharge();
+				double syscharge = getSysCharge();
 				for ( int i = 0 ; i < owners.size() ; i ++) {
 					String owner = owners.get(i);
 					User user = userService.queryByPhone(owner);
-					//如果该用户不允许代销，则忽略
-					if (!user.isAllow()) {
+					Map map = getAgentSellerPercent(user,seller);
+					if (!isAllow(map)) {
 						continue;
-					}
-					//查询设置的提成
-					boolean isJoin = false;
-					double percent = user.getChargePrecent();
-					List<AgentSeller> ass = agentSellerService.queryListByPhone(owner, seller.getUserPhone(), 1, 1);
-					if ( null != ass && ass.size() > 0) {
-						//如果设置了不允许代销，则不显示
-						AgentSeller as0 = ass.get(0);
-						if (!as0.isAllow()) {
-							continue;
-						}
-						isJoin  = true;
-						percent = as0.getChargePercent();
 					}
 					ShopList sl = new ShopList();
 					sl.setOwner(owner);
@@ -82,25 +78,9 @@ public class ProductController {
 					ownerlist.add(owner);
 					int productCount = productService.queryCount(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE);
 					sl.setProductCount(productCount);
-					List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, 1, 2);
-					if ( null != products) {
-						List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
-						for ( int j = 0 ; j < products.size() ; j ++) {
-							Product p = products.get(j);
-							ShopProduct sp = new ShopProduct();
-							sp.setProductName(p.getName());
-							sp.setPrice(df.format(p.getPrice()));
-							sp.setImage(p.getFirstImg());
-							double chargedouble = p.getPrice()*(percent-syscharge)/100.00;
-							if (chargedouble<0) {
-								chargedouble = 0d;
-							}
-							sp.setCharge(df.format(chargedouble));
-							shopProducts.add(sp);
-						}
-						sl.setProducts(shopProducts);
-					}
-					sl.setJoin(isJoin);
+					List<ShopProduct> splist = queryShopProduct(ownerlist,1,2,getPercent(map),syscharge);
+					sl.setProducts(splist);
+					sl.setJoin(isJoin(map));
 					shoplist.add(sl);
 				}
 			}
@@ -111,6 +91,108 @@ public class ProductController {
 			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品错误:"+e.getLocalizedMessage(), null);
 		}
 	}
+	
+	/**
+	 * 代销------》代理商品列表
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value="agentProductList",method=RequestMethod.GET)
+	@ResponseBody
+	public String productPhonelist(String owner,int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			User seller = LoginUserUtil.getCurrentUser(request);
+			User user = userService.queryByPhone(owner);
+			Map map = getAgentSellerPercent(user,seller);
+			if (isAllow(map)) {
+				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"该代理禁止代销啦", null);
+			}
+			List<String> ownerlist = new ArrayList<String>();
+			ownerlist.add(owner);
+			List<ShopProduct> splist = queryShopProduct(ownerlist,1,2,getPercent(map),getSysCharge());
+			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", splist);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品错误:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	private double getSysCharge()  {
+		return agentSellerService.queryCharge();
+	}
+	
+	private boolean isAllow(Map agentSellerMap) {
+		return (boolean)agentSellerMap.get("isAllow");
+	}
+	
+	private boolean isJoin(Map agentSellerMap) {
+		return (boolean)agentSellerMap.get("isJoin");
+	}
+	
+	private double getPercent(Map agentSellerMap) {
+		return (double)agentSellerMap.get("percent");
+	}
+	
+	private Map getAgentSellerPercent(User owner,User seller) {
+		Map map = new HashMap();
+		//如果该用户不允许代销，则忽略
+		if (!owner.isAllow()) {
+			map.put("isAllow", false);
+		}else {
+			//查询设置的提成
+			boolean isJoin = false;
+			double percent = owner.getChargePrecent();
+			List<AgentSeller> ass = agentSellerService.queryListByPhone(owner.getUserPhone(), seller.getUserPhone(), 1, 1);
+			if ( null != ass && ass.size() > 0) {
+				//如果设置了不允许代销，则不显示
+				AgentSeller as0 = ass.get(0);
+				if (!as0.isAllow()) {
+					map.put("isAllow", false);
+				}else {
+					map.put("isAllow", true);
+				}
+				isJoin  = true;
+				percent = as0.getChargePercent();
+			}else {
+				map.put("isAllow", true);
+			}
+			map.put("isJoin", isJoin);
+			map.put("percent", percent);
+		}
+		return map;
+	}
+	
+	private List<ShopProduct> queryShopProduct(List<String> ownerlist,int pageIndex,int pageSize,double percent,double syscharge) {
+		List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize);
+		if ( null != products) {
+			DecimalFormat df=new DecimalFormat(".##");
+			List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
+			for ( int j = 0 ; j < products.size() ; j ++) {
+				Product p = products.get(j);
+				ShopProduct sp = new ShopProduct();
+				sp.setProductName(p.getName());
+				sp.setPrice(df.format(p.getPrice()));
+				sp.setImage(p.getFirstImg());
+				double chargedouble = p.getPrice()*(percent-syscharge)/100.00;
+				if (chargedouble<0) {
+					chargedouble = 0d;
+				}
+				sp.setCharge(df.format(chargedouble));
+				sp.setStock(p.getStock());
+				shopProducts.add(sp);
+			}
+			return shopProducts;
+		}
+		return null;
+	}
+	
+	
+	
+	
 	
 	@RequestMapping(value="list",method=RequestMethod.GET)
 	@ResponseBody

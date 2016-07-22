@@ -48,7 +48,7 @@ public class HomeController {
 	AgentSellerService agentSellerService;
 	
 	/**
-	 * 代理销售额
+	 * 代理首页------》销售额
 	 * @param request
 	 * @param response
 	 * @return
@@ -70,7 +70,7 @@ public class HomeController {
 	}
 	
 	/**
-	 * 代销销售额
+	 * 代销首页------》销售额
 	 * @param request
 	 * @param response
 	 * @return
@@ -91,6 +91,12 @@ public class HomeController {
 		}
 	}
 	
+	/**
+	 * 代理首页------》统计部分
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "agent",method=RequestMethod.GET)
 	@ResponseBody
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
@@ -116,6 +122,14 @@ public class HomeController {
 		}
 	}
 	
+	/**
+	 * 代销首页------》统计部分
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "sellerMain",method=RequestMethod.GET)
 	@ResponseBody
 	public String sellerMainList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response) {
@@ -163,6 +177,14 @@ public class HomeController {
 		}
 	}
 	
+	/**
+	 * 代理------》代销列表
+	 * @param pageIndex
+	 * @param pageSize
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "agentSeller",method=RequestMethod.GET)
 	@ResponseBody
 	public String agentSeller(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response) {
@@ -191,6 +213,13 @@ public class HomeController {
 		}
 	}
 	
+	/**
+	 * 代理-----》代销统计头部
+	 * @param seller
+	 * @param request
+	 * @param response
+	 * @return
+	 */
 	@RequestMapping(value = "sellerBussinessHeader",method=RequestMethod.GET)
 	@ResponseBody
 	public String sellerBussinessHeader(String seller,HttpServletRequest request, HttpServletResponse response) {
@@ -210,7 +239,7 @@ public class HomeController {
 	}
 	
 	/**
-	 * 代销累计
+	 * 代理----》代销累计
 	 * @param seller
 	 * @param request
 	 * @param response
@@ -221,7 +250,7 @@ public class HomeController {
 	public String sellerAllBussinessBody(String seller,HttpServletRequest request,HttpServletResponse response) {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
-			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,null,null);
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,null,null,true);
 			//总带看数
 			List<AgentSeller> agentSeller = agentSellerService.queryListByPhone(owner.getUserPhone(), seller, 1, 1);
 			int totalSellerWatchCount = 0;
@@ -244,7 +273,7 @@ public class HomeController {
 	
 	
 	/**
-	 * 代销周累计
+	 * 代理----》代销周累计
 	 * @param seller
 	 * @param request
 	 * @param response
@@ -255,7 +284,7 @@ public class HomeController {
 	public String sellerWeekBussiness(String seller,HttpServletRequest request,HttpServletResponse response) {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
-			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowWeekBegin(),DateUtil.getNowWeekEnd());
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowWeekBegin(),DateUtil.getNowWeekEnd(),true);
 			//TODO 总带看数
 			//TODO 带看数占比 建议不做，带看统计不要跟时间来统计，数据量太大
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
@@ -266,7 +295,7 @@ public class HomeController {
 	}
 	
 	/**
-	 * 代销累计
+	 * 代理------》代销累计
 	 * @param seller
 	 * @param request
 	 * @param response
@@ -277,7 +306,7 @@ public class HomeController {
 	public String sellerMonthBussiness(String seller,HttpServletRequest request,HttpServletResponse response) {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
-			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd());
+			Map result = getSellerBussinessMap(owner.getUserPhone(),seller,request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
@@ -285,31 +314,84 @@ public class HomeController {
 		}
 	}
 	
-	private Map getSellerBussinessMap(String owner,String seller,HttpServletRequest request,String begin,String end) {
+	private Map getSellerBussinessMap(String owner,String seller,HttpServletRequest request,String begin,String end,boolean needsPercent) {
 		Map result = new HashMap();
 		
 		//总代销额
 		Double totalSellercharge = orderService.querySellerTotalPrice(owner,seller,begin,end);
 		result.put("totalSell",totalSellercharge==null?0d:totalSellercharge);
-		//销售额团队占比
-		Double totalCharge = orderService.querySellerTotalPrice(owner,null,begin,end);
-		if ( null == totalCharge) {
-			totalCharge = 1.00;
+		if (needsPercent) {
+			//销售额团队占比
+			Double totalCharge = orderService.querySellerTotalPrice(owner,null,begin,end);
+			if ( null == totalCharge) {
+				totalCharge = 1.00;
+			}
+			result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
 		}
-		result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
-		
 		//订单总数
 		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1, -1, 
 				-1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
 		result.put("totalOrderCount", totalSellerOrderCount==null?0:totalSellerOrderCount);
-		//订单总数团队占比
-		Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
-				-1, -1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
-		if ( null == totalOrderCount) {
-			totalOrderCount = 1;
+		if (needsPercent) {
+			//订单总数团队占比
+			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
+					-1, -1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
+			if ( null == totalOrderCount) {
+				totalOrderCount = 1;
+			}
+			result.put("totalOrderCountPercent", (totalSellerOrderCount/totalOrderCount)*100.00);
 		}
-		result.put("totalOrderCountPercent", (totalSellerOrderCount/totalOrderCount)*100.00);
 		return result;
 	}
 	
+	/**
+	 * 代销------》代理店铺信息头
+	 * @param owner
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentShop",method=RequestMethod.GET)
+	@ResponseBody
+	public String agentShop(String owner,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User owenrUser = userService.queryByPhone(owner);
+			Map result = new HashMap();
+			result.put("weChat", owenrUser.getWeChatNo());
+			result.put("phone", owenrUser.getUserPhone());
+			result.put("name", owenrUser.getUserName());
+			Double charge = orderService.querySellerTotalPrice(owner,null,null,null);
+			result.put("totalSell", charge==null?0d:charge);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
+	
+	/**
+	 * 代销------》代理店铺销售信息
+	 * @param owner
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "agentBussiness",method=RequestMethod.GET)
+	@ResponseBody
+	public String agentBussiness(String owner,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User seller = LoginUserUtil.getCurrentUser(request);
+			Map result = new HashMap();
+			Map shopResult = getSellerBussinessMap(owner,null,request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),false);
+			result.put("shop", shopResult);
+			Map sellerResult = getSellerBussinessMap(owner,seller.getUserPhone(),request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),false);
+			result.put("seller", sellerResult);
+			Map weekResult = getSellerBussinessMap(owner,seller.getUserPhone(),request,DateUtil.getNowWeekBegin(),DateUtil.getNowWeekEnd(),false);
+			result.put("week", weekResult);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败", e.getMessage());
+		}
+	}
 }

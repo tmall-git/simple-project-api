@@ -40,6 +40,7 @@ public class AgentSellerController {
 	AgentSellerService agentSellerService;
 	
 	/**
+	 * 代销------》加入代理
 	 * @param request
 	 * @param response
 	 * @return
@@ -71,6 +72,7 @@ public class AgentSellerController {
 	
 	
 	/**
+	 * 代销------》取消加入代理
 	 * @param request
 	 * @param response
 	 * @return
@@ -94,6 +96,7 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------》设置代销
 	 * @param request
 	 * @param response
 	 * @return
@@ -117,6 +120,7 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------>设置是否允许代销
 	 * @param request
 	 * @param response
 	 * @return
@@ -142,6 +146,7 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------》统一设置代销提成比
 	 * @param request
 	 * @param response
 	 * @return
@@ -163,6 +168,7 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------》查询代销提成比
 	 * @param request
 	 * @param response
 	 * @return
@@ -186,6 +192,7 @@ public class AgentSellerController {
 	}
 	
 	/**
+	 * 代理------》设置单个代销提成比
 	 * @param request
 	 * @param response
 	 * @return
