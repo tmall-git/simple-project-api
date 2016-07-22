@@ -58,8 +58,8 @@ public class HomeController {
 	public String agentSellCount(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			Double charge = orderService.queryAgentTotalCharge(phone);
-			Double total = orderService.queryAgentTotalPrice(phone);
+			Double charge = orderService.queryAgentTotalCharge(phone,null,null);
+			Double total = orderService.queryAgentTotalPrice(phone,null,null);
 			User user = userService.queryByPhone(phone);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance()));
 		}catch(Exception e) {
@@ -203,6 +203,8 @@ public class HomeController {
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);
 					asm.setWatchCount(as.getWatchCount());
+					asm.setSellerPhone(as.getSellerPhone());
+					asm.setWeiChat(as.getSellerName());
 					pageList.add(asm);
 				}
 			}
@@ -260,7 +262,7 @@ public class HomeController {
 			result.put("totalWatchCount", totalSellerWatchCount);
 			//带看数占比
 			Integer totalWatchCount = agentSellerService.querySumWatchCount(owner.getUserPhone());
-			if ( null == totalWatchCount) {
+			if ( null == totalWatchCount || totalWatchCount == 0) {
 				totalWatchCount = 1;
 			}
 			result.put("totalWatchPercent", (totalSellerWatchCount/totalWatchCount)*100.00);
@@ -322,8 +324,8 @@ public class HomeController {
 		result.put("totalSell",totalSellercharge==null?0d:totalSellercharge);
 		if (needsPercent) {
 			//销售额团队占比
-			Double totalCharge = orderService.querySellerTotalPrice(owner,null,begin,end);
-			if ( null == totalCharge) {
+			Double totalCharge = orderService.queryAgentTotalPrice(owner,begin,end);
+			if ( null == totalCharge || totalCharge==0) {
 				totalCharge = 1.00;
 			}
 			result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
@@ -336,7 +338,7 @@ public class HomeController {
 			//订单总数团队占比
 			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
 					-1, -1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
-			if ( null == totalOrderCount) {
+			if ( null == totalOrderCount || totalOrderCount ==0) {
 				totalOrderCount = 1;
 			}
 			result.put("totalOrderCountPercent", (totalSellerOrderCount/totalOrderCount)*100.00);
