@@ -17,7 +17,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.PatternUtils;

@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
 import com.simple.model.PageResult;
 import com.simple.model.Product;

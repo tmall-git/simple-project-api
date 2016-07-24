@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.common.util.DateUtil;
+import com.simple.constant.Constant;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
 import com.simple.model.AgentSellerMain;
@@ -102,10 +102,8 @@ public class HomeController {
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND, 
-					-1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
-			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,
-					-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1,null,null);
+			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND,null,null);
+			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_REGECT,null,null);
 			Integer sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, user.getUserPhone());
 			Integer nostock = productService.queryNoStockCount(user.getUserPhone());
 			Integer totalSellers = agentSellerService.queryCountByPhone(user.getUserPhone(),null);
@@ -136,11 +134,9 @@ public class HomeController {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
 			//待发货
-			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND, 
-					-1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
+			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND,null,null);
 			//退货中
-			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),
-					-1, -1, Constant.ORDER_REJECT_STATUS_YES, -1,null,null);
+			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_REGECT,null,null);
 			//代销店铺总数
 			int count = agentSellerService.queryCountByPhone(null, user.getUserPhone());
 			List<AgentSeller> asllers = agentSellerService.queryListByPhone(null, user.getUserPhone(),pageIndex,pageSize);
@@ -153,10 +149,8 @@ public class HomeController {
 						continue;
 					}
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),
-							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
-					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),
-							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
+					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),-1);
 					SellerListVO sv = new SellerListVO();
 					sv.setDealCount(orderCount);
 					sv.setProductCount(productCount);
@@ -197,8 +191,7 @@ public class HomeController {
 				for (int i = 0 ; i < asllers.size() ; i ++)  {
 					AgentSeller as = asllers.get(i);
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),
-							-1, -1, -1, Constant.ORDER_PAY_STATUS_PAY,null,null);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
 					AgentSellerMain asm = new AgentSellerMain();
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);
@@ -335,14 +328,12 @@ public class HomeController {
 			result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
 		}
 		//订单总数
-		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1, -1, 
-				-1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
+		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1,begin,end);
 		if (totalSellerOrderCount==null) totalSellerOrderCount=0;
 		result.put("totalOrderCount", totalSellerOrderCount);
 		if (needsPercent) {
 			//订单总数团队占比
-			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1, 
-					-1, -1, Constant.ORDER_PAY_STATUS_PAY,begin,end);
+			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1,begin,end);
 			if ( null == totalOrderCount || totalOrderCount ==0) {
 				totalOrderCount = 1;
 			}

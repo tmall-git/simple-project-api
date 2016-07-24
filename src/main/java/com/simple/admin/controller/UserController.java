@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.simple.admin.constant.Constant;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.MD5Util;
+import com.simple.constant.Constant;
 import com.simple.model.User;
 import com.simple.service.UserService;
 
