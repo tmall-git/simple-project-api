@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.admin.util.ProductTokenUtil;
+import com.simple.common.util.Base64;
 import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
 import com.simple.model.PageResult;
@@ -230,25 +232,6 @@ public class ProductController {
 		}
 	}
 	
-	// TODO 添加是否有seller验证
-	@RequestMapping(value="buy",method=RequestMethod.POST)
-	@ResponseBody
-	public String buy(Integer id,HttpServletRequest request, HttpServletResponse response){
-		try {
-			int stock = productService.updateStock(id);
-			if (stock<=0) {
-				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"购买失败!商品没有库存.", null);
-			}
-			//TODO 后续购买流程
-			return null;
-		}
-		catch (Exception e){
-			e.printStackTrace();
-			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"购买失败!", e.getMessage());
-		}
-	}
-	
-	
 	@RequestMapping(value = "add",method=RequestMethod.POST)
 	@ResponseBody
 	public String add(HttpServletRequest request, HttpServletResponse response) {
@@ -323,4 +306,18 @@ public class ProductController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", e.getMessage());
 		}
 	}
+	
+	@RequestMapping(value = "share",method=RequestMethod.GET)
+	@ResponseBody
+	public String share(Integer id,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			String token = ProductTokenUtil.getToken(id, user.getUserPhone());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"分享成功", token);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"分享失败:"+e.getLocalizedMessage(), e.getMessage());
+		}
+	}
+	
 }

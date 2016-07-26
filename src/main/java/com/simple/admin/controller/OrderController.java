@@ -13,12 +13,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.admin.util.ProductTokenUtil;
 import com.simple.constant.Constant;
 import com.simple.model.Expressage;
 import com.simple.model.Order;
 import com.simple.model.OrderForm;
 import com.simple.model.User;
 import com.simple.service.OrderService;
+import com.simple.service.UserService;
 
 @Controller
 @RequestMapping("/order")
@@ -26,6 +28,8 @@ public class OrderController {
 
 	@Autowired
 	OrderService orderService;
+	@Autowired
+	UserService userService;
 	
 	/**
 	 * 代理------》待发货
@@ -308,7 +312,19 @@ public class OrderController {
 	@ResponseBody
 	public String addOrder(OrderForm orderForm,HttpServletRequest request, HttpServletResponse response){
 		try {
-			String ordeNo = orderService.addOrder(orderForm);
+			if ( null == orderForm.getToken() ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:无token", null);
+			}
+			String token = orderForm.getToken();
+			String phone = ProductTokenUtil.validToken(orderForm.getProductId(), token);
+			if ( null == phone) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:token无效", null);
+			}
+			User seller = userService.queryByPhone(phone);
+			if ( null == seller ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:代销不存在", null);
+			}
+			String ordeNo = orderService.addOrder(orderForm,phone);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", ordeNo);
 		}catch(Exception e) {
 			e.printStackTrace();
