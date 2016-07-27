@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.ruanwei.tool.SmsClient;
+import com.ruanwei.tool.SmsResult;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.MD5Util;
@@ -90,7 +92,13 @@ public class UserController {
 		try {
 			String validatorCode = getValidateCode();
 			cacheValidateCode.put(phone,validatorCode );
-			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"获取验证码成功", validatorCode);
+			SmsResult sr = SmsClient.sendMsg(phone, "验证码："+validatorCode);
+			if (sr.isSuccess()) {
+				return  AjaxWebUtil.sendAjaxResponse(request, response, true,"获取验证码成功", sr.getMsg());
+			}else {
+				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败", sr.getMsg());
+			}
+			
 		}
 		catch (Exception e){
 			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败", null);
@@ -154,19 +162,6 @@ public class UserController {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"失败", null);
 		}
-	}
-	
-	@RequestMapping(value = "claimAgent",method=RequestMethod.POST)
-	@ResponseBody
-	public String claimAgent(HttpServletRequest request, HttpServletResponse response) {
-		try {
-			String agentPhone = AjaxWebUtil.getRequestParameter(request,"agentPhone");
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return null;
 	}
 	
 	private boolean checkUserUnique(String statement, Map<String, Object> params) {
