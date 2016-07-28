@@ -313,6 +313,11 @@ public class ProductController {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
 			String token = ProductTokenUtil.getToken(id, user.getUserPhone());
+			//更新用户分享次数
+			Product product = productService.getById(id, false);
+			if ( null != product) {
+				agentSellerService.increaseWatchCount(product.getOwner(), user.getUserPhone());
+			}
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"分享成功", token);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);

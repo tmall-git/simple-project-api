@@ -1,5 +1,6 @@
 package com.simple.admin.controller;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -92,7 +93,7 @@ public class UserController {
 		try {
 			String validatorCode = getValidateCode();
 			cacheValidateCode.put(phone,validatorCode );
-			SmsResult sr = SmsClient.sendMsg(phone, "验证码："+validatorCode);
+			SmsResult sr = SmsClient.sendMsg(phone, "验证码:"+validatorCode);
 			if (sr.isSuccess()) {
 				return  AjaxWebUtil.sendAjaxResponse(request, response, true,"获取验证码成功", sr.getMsg());
 			}else {
