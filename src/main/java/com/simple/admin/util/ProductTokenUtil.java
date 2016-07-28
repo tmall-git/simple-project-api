@@ -44,10 +44,24 @@ public class ProductTokenUtil {
 		}
 	}
 	
+	public static String getOrderListToken(String phone) {
+		return Base64.getBase64("OL"+phone);
+	}
+	
+	public static String validOrderListToken(String token) {
+		String tokenstring = Base64.getFromBase64(token);
+		if (null == tokenstring || tokenstring.length()<=2) {
+			return null;
+		}
+		return tokenstring.substring(2);
+	}
+	
 	public static void main(String[] args) {
 		String token = getToken(1,"18600671341");
 		System.out.println(token);
 		System.out.println(validToken(1,token));
+		String oltoken = getOrderListToken("18600671341");
+		System.out.println(oltoken+">>>>"+validOrderListToken("T0wxODYwMDY3MTM0WA"));
 	}
 	
 }

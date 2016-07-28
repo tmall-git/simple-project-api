@@ -342,10 +342,52 @@ public class OrderController {
 	@ResponseBody
 	public String pay(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
+			//TODO 查询订单金额，跳转微信支付
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 订单支付成功
+	 * 更新订单状态为待发货，支付时间，支付微信号
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "paySuccess",method=RequestMethod.GET)
+	@ResponseBody
+	public String paySuccess(String code,String payAccount,String payNo,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//更新订单信息，并返回列表token
+			Order order = orderService.updateOrderPaySuccess(code, payAccount,payNo);
+			String token = ProductTokenUtil.getOrderListToken(order.getUser_phone());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单支付失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 我的订单
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "myOrders",method=RequestMethod.GET)
+	@ResponseBody
+	public String myOrders(String token,int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//更新订单信息，并返回列表token
+			String phone = ProductTokenUtil.validOrderListToken(token);
+			List<Order> orders =  orderService.queryMyOrders(phone, pageIndex, pageSize);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询订单成功", orders);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询订单失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
