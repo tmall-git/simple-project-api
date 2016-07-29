@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.model.AgentSeller;
+import com.simple.model.Order;
+import com.simple.model.Product;
 import com.simple.model.User;
 import com.simple.service.AgentSellerService;
 import com.simple.service.OrderService;
@@ -50,19 +52,45 @@ public class AgentSellerController {
 	public String ownerlist(String owner,HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User seller = LoginUserUtil.getCurrentUser(request);
-			int count = agentSellerService.queryCountByPhone(owner, seller.getUserPhone());
-			if (count > 0 ) {
-				return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
-			}
-			User user = userService.queryByPhone(owner);
-			AgentSeller as = new AgentSeller();
-			as.setSellerPhone(seller.getUserPhone());
-			as.setSellerName(seller.getWeChatNo());
-			as.setAgentPhone(owner);
-			as.setChargePercent(user.getChargePrecent());
-			as.setAgentName(user.getWeChatNo());
-			agentSellerService.add(as);
+			return this.createAgentSeller(owner, seller.getUserPhone(),seller.getWeChatNo(), request, response);
+		}catch(Exception e) {
+			log.error("绑定失败",e);
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"绑定失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	private String createAgentSeller(String owner,String seller,String sellerWeiChat,HttpServletRequest request, HttpServletResponse response) {
+		int count = agentSellerService.queryCountByPhone(owner, seller);
+		if (count > 0 ) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
+		}
+		User user = userService.queryByPhone(owner);
+		AgentSeller as = new AgentSeller();
+		as.setSellerPhone(seller);
+		as.setSellerName(sellerWeiChat);
+		as.setAgentPhone(owner);
+		as.setChargePercent(user.getChargePrecent());
+		as.setAgentName(user.getWeChatNo());
+		agentSellerService.add(as);
+		return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
+	}
+	
+	/**
+	 * 用户订单------》加入代销
+	 * @param code:订单编号
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "userJoin",method=RequestMethod.POST)
+	@ResponseBody
+	public String userJoin(String code,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			Order order = orderService.getOrderByCode(code);
+			int productId = order.getProduct_id();
+			Product product = productService.getById(productId, false);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"设置成功:", product.getOwner());
 		}catch(Exception e) {
 			log.error("绑定失败",e);
 			e.printStackTrace();

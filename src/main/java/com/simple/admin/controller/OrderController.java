@@ -226,6 +226,7 @@ public class OrderController {
 	public String getOrderDetail(String code,HttpServletRequest request, HttpServletResponse response){
 		//String prmId = AjaxWebUtil.getRequestParameter(request,"id");
 		Order order = orderService.getOrderByCode(code);
+		order.setProductToken(ProductTokenUtil.getToken(order.getProduct_id(), order.getSeller()));
 		if(order == null){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单不存在!", null);
 		}
@@ -359,7 +360,7 @@ public class OrderController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "paySuccess",method=RequestMethod.GET)
+	@RequestMapping(value = "paySuccess",method=RequestMethod.POST)
 	@ResponseBody
 	public String paySuccess(String code,String payAccount,String payNo,HttpServletRequest request, HttpServletResponse response){
 		try {
