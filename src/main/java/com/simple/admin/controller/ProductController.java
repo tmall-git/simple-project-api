@@ -325,4 +325,28 @@ public class ProductController {
 		}
 	}
 	
+	@RequestMapping(value="infoToBuy",method=RequestMethod.GET)
+	@ResponseBody
+	public String info(Integer id,String token,HttpServletRequest request, HttpServletResponse response){
+		try {
+			String sellerPhone = ProductTokenUtil.validToken(id, token);
+			User seller = userService.queryByPhone(sellerPhone);
+			if (null == seller) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"token无效", null);
+			}
+			Product product = productService.getById(id,false);
+			ProductImage pi = productService.getImage(id);
+			if ( null != pi ) {
+				product.setThumbnail(pi.getImage());
+			}
+			product.setSellerPhone(seller.getUserPhone());
+			product.setSellerWeChatNo(seller.getWeChatNo());
+			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+		}
+	}
+	
 }

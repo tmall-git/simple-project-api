@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.ruanwei.tool.SmsClientAccessTool;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
+import com.simple.common.config.EnvPropertiesConfiger;
 import com.simple.constant.Constant;
 import com.simple.model.Expressage;
 import com.simple.model.Order;
@@ -390,5 +392,32 @@ public class OrderController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询订单失败:"+e.getLocalizedMessage(), null);
 		}
 	}
+	
+	private static final String KUAIDI_URL = EnvPropertiesConfiger.getValue("kuaidiUrl");
+	private static final String KUAIDI_ID = EnvPropertiesConfiger.getValue("kuaidiId");
+	private static final String KUAIDI_PARAM ="?id="+KUAIDI_ID+"&com=%s&nu=%s&show=2&muti=1&order=asc";
+	/**
+	 * 查询物流信息
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "orderExpressage",method=RequestMethod.GET)
+	@ResponseBody
+	public String orderExpressage(String code,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//
+			Order order = orderService.getOrderByCode(code);
+			String com = order.getExpressage();
+			String nu = order.getExpressage_no();
+			String result = SmsClientAccessTool.getInstance().doAccessHTTPPost(KUAIDI_URL, String.format(KUAIDI_PARAM, com,nu), null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询订单成功", result);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询订单失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	
 	
 }
