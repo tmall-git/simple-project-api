@@ -107,11 +107,7 @@ public class HomeController {
 			Integer sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, user.getUserPhone());
 			Integer nostock = productService.queryNoStockCount(user.getUserPhone());
 			Integer totalSellers = agentSellerService.queryCountByPhone(user.getUserPhone(),null);
-			Double chargepercent  = 0d;
-			List<AgentSeller> ass =  agentSellerService.queryByAgent(user.getUserPhone());
-			if ( null != ass && ass.size() > 0 ) {
-				chargepercent = ass.get(0).getChargePercent();
-			}
+			Double chargepercent  = user.getChargePrecent();
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", 
 					new AgentHome(daifahuo, tuihuozhong, sellproduct, nostock, totalSellers, chargepercent,user.getCategory()));
 		}catch(Exception e) {
@@ -154,7 +150,7 @@ public class HomeController {
 					SellerListVO sv = new SellerListVO();
 					sv.setDealCount(orderCount);
 					sv.setProductCount(productCount);
-					sv.setSellerAmount(charge);
+					sv.setSellerAmount(charge==null?0d:charge);
 					sv.setUserPhone(as.getAgentPhone());
 					sv.setWechatName(as.getAgentName());
 					pageList.add(sv);
@@ -191,7 +187,7 @@ public class HomeController {
 				for (int i = 0 ; i < asllers.size() ; i ++)  {
 					AgentSeller as = asllers.get(i);
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),Constant.ORDER_STATUS_FINISHED,null,null);
 					AgentSellerMain asm = new AgentSellerMain();
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);

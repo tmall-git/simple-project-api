@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.alibaba.fastjson.JSONObject;
+import com.ruanwei.tool.SmsClient;
 import com.ruanwei.tool.SmsClientAccessTool;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
@@ -20,6 +22,8 @@ import com.simple.constant.Constant;
 import com.simple.model.Expressage;
 import com.simple.model.Order;
 import com.simple.model.OrderForm;
+import com.simple.model.ResponseInfo;
+import com.simple.model.ResponseStatus;
 import com.simple.model.User;
 import com.simple.service.OrderService;
 import com.simple.service.UserService;
@@ -243,7 +247,9 @@ public class OrderController {
 	@ResponseBody
 	public String send(String code,String expressCode,String expressNo,String expressName, HttpServletRequest request, HttpServletResponse response){
 		try {
-			orderService.updateOrderSend(code, expressCode, expressNo, expressName);
+			Order order = orderService.updateOrderSend(code, expressCode, expressNo, expressName);
+			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已发货.");
+			SmsClient.sendMsg(order.getUser_phone(), "订单["+order.getOrder_no()+"]已发货.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "发货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -261,7 +267,9 @@ public class OrderController {
 	@ResponseBody
 	public String reject(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
-			orderService.updateReject(code);
+			Order order = orderService.updateReject(code);
+			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已申请退货，请尽快处理.");
+			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]已申请退货，请尽快联系"+order.getSeller()+"处理.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -279,7 +287,9 @@ public class OrderController {
 	@ResponseBody
 	public String rejectRefuse(String code,String remark,HttpServletRequest request, HttpServletResponse response){
 		try {
-			orderService.updateRejectRefuse(code,remark);
+			Order order = orderService.updateRejectRefuse(code,remark);
+			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已拒绝退货.");
+			SmsClient.sendMsg(order.getUser_phone(), "订单["+order.getOrder_no()+"]已拒绝退货.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -297,7 +307,10 @@ public class OrderController {
 	@ResponseBody
 	public String cancel(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
-			orderService.updateCancel(code);
+			Order order = orderService.updateCancel(code);
+			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已取消.");
+			SmsClient.sendMsg(order.getUser_phone(), "订单["+order.getOrder_no()+"]已取消.");
+			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]已取消.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "取消成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -346,6 +359,10 @@ public class OrderController {
 	public String pay(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
 			//TODO 查询订单金额，跳转微信支付
+			Order order = orderService.getOrderByCode(code);
+			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
+				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
+			}
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -367,6 +384,8 @@ public class OrderController {
 			//更新订单信息，并返回列表token
 			Order order = orderService.updateOrderPaySuccess(code, payAccount,payNo);
 			String token = ProductTokenUtil.getOrderListToken(order.getUser_phone());
+			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]支付成功,请尽快发货.");
+			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]支付成功,请联系"+order.getOwner()+"尽快发货.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
 		}catch(Exception e) {
 			e.printStackTrace();

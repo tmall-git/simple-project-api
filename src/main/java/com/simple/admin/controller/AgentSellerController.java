@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -51,6 +52,9 @@ public class AgentSellerController {
 	@ResponseBody
 	public String ownerlist(String owner,HttpServletRequest request, HttpServletResponse response) {
 		try {
+			if (StringUtils.isEmpty(owner)) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"绑定失败:owner为空", null);
+			}
 			User seller = LoginUserUtil.getCurrentUser(request);
 			return this.createAgentSeller(owner, seller.getUserPhone(),seller.getWeChatNo(), request, response);
 		}catch(Exception e) {

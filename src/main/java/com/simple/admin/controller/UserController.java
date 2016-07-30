@@ -57,7 +57,7 @@ public class UserController {
 			String password = AjaxWebUtil.getRequestParameter(request,"password");
 			String validateCode = AjaxWebUtil.getRequestParameter(request,"validateCode");
 			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
-			String wechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo");
+			String wechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo",true);
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put("userPhone", userPhone);
 			if(checkUserUnique("user.selectOne",params)){
@@ -97,12 +97,12 @@ public class UserController {
 			if (sr.isSuccess()) {
 				return  AjaxWebUtil.sendAjaxResponse(request, response, true,"获取验证码成功", sr.getMsg());
 			}else {
-				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败", sr.getMsg());
+				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败:"+validatorCode, sr.getMsg());
 			}
 			
 		}
 		catch (Exception e){
-			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败", null);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"获取验证码失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
@@ -145,10 +145,10 @@ public class UserController {
 	public String modifyUser(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
-			String prmWechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo");
-			String prmUserNick = AjaxWebUtil.getRequestParameter(request,"userNick");
-			String userName = AjaxWebUtil.getRequestParameter(request,"userName");
-			String prmCategory = AjaxWebUtil.getRequestParameter(request,"category");
+			String prmWechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo",true);
+			String prmUserNick = AjaxWebUtil.getRequestParameter(request,"userNick",true);
+			String userName = AjaxWebUtil.getRequestParameter(request,"userName",true);
+			String prmCategory = AjaxWebUtil.getRequestParameter(request,"category",true);
 			Map<String, Object> params = new HashMap<String, Object>();
 			params.put("userPhone", userPhone);
 			User user = userService.selectOne("user.selectOne", params);

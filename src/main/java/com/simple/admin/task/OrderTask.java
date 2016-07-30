@@ -21,7 +21,7 @@ public class OrderTask {
 	 * 取消订单  1天未付款
 	 */
 	public void cancelUnPayOrder() {
-		String end = DateUtil.date2AllString(DateUtil.getNewDateByHours(new Date(), -24));
+		String end = DateUtil.date2AllString(DateUtil.getNewDateByMinutes(new Date(), -3));
 		List<Order> orders = orderService.queryListByStatus(null, null, Constant.ORDER_STATUS_UNPAY, null, end, 1, 100);
 		if ( null != orders && orders.size() > 0 ) {
 			for ( int i = 0 ; i < orders.size() ; i ++) {

@@ -114,7 +114,7 @@ public class ProductController {
 			}
 			List<String> ownerlist = new ArrayList<String>();
 			ownerlist.add(owner);
-			List<ShopProduct> splist = queryShopProduct(ownerlist,1,2,getPercent(map),getSysCharge());
+			List<ShopProduct> splist = queryShopProduct(ownerlist,pageIndex,pageSize,getPercent(map),getSysCharge());
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", splist);
 		}
 		catch (Exception e){
