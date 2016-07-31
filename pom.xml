@@ -176,6 +176,14 @@
 						<encoding>UTF-8</encoding>
 					</configuration>
 				</plugin>
+				<plugin>  
+	                <groupId>org.apache.maven.plugins</groupId>  
+	                <artifactId>maven-resources-plugin</artifactId>  
+	                <version>2.6</version>  
+	                <configuration>  
+	                    <encoding>UTF-8</encoding><!-- 指定编码格式，否则在DOS下运行mvn命令时当发生文件资源copy时将使用系统默认使用GBK编码 -->  
+	                </configuration>  
+	            </plugin>
 			</plugins>
 		</pluginManagement>
     </build>

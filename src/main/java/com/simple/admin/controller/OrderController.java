@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSONObject;
 import com.ruanwei.tool.SmsClient;
 import com.ruanwei.tool.SmsClientAccessTool;
+import com.ruanwei.tool.SmsResult;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
@@ -438,6 +439,8 @@ public class OrderController {
 		}
 	}
 	
-	
+	public static void main(String[] args) {
+		SmsResult sr = SmsClient.sendMsg("18600671341", "请联系15210931700发货");
+	}
 	
 }
