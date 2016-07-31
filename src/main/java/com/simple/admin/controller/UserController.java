@@ -77,6 +77,7 @@ public class UserController {
 			u.setWeChatNo(wechatNo);
 			u.setPassword(mPassword);
 			u.setChargePrecent(Constant.CHARGE_DEFAULT);
+			u.setAllowSell(Constant.ALLOW_SELL);
 			userService.insert(u);
 			LoginUserUtil.setCurrentUser(request, u);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"注册成功", null);
@@ -182,17 +183,5 @@ public class UserController {
 			a += chars[(int)(Math.random()*10)];
 		}
 		return a;
-	}
-	
-	public static void main(String[] args) {
-		int[] chars = {0,1,2,3,4,5,6,7,8,9};
-		long sysTime = System.currentTimeMillis();
-		System.out.println();
-		String a = new String();
-		for (int i = 0; i < 6; i++) {
-			a += chars[(int)(Math.random()*10)];
-		}
-		System.out.println(System.currentTimeMillis() - sysTime);
-		System.out.println(a);
 	}
 }
