@@ -349,6 +349,34 @@ public class OrderController {
 		}
 	}
 	
+	private static final String KUAI_DI_ID = EnvPropertiesConfiger.getValue("kuaidiId");
+	/**
+	 * 订单物流信息
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "logistics",method=RequestMethod.GET)
+	@ResponseBody
+	public String logistics(String code,HttpServletRequest request, HttpServletResponse response){
+		try {
+			Order order = orderService.getOrderByCode(code);
+			if (null == order) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单不存在", null);
+			}
+			String url = SmsClientAccessTool.getInstance()
+			.doAccessHTTPGet("http://www.kuaidi100.com/applyurl?key="+KUAI_DI_ID+"&com="+
+			order.getExpressage()+"&nu="+order.getExpressage_no(), null);
+			if ( null != url) {
+				url.replace("\r\n", "");
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", url);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
 	/**
 	 * TODO 订单支付
 	 * @param request

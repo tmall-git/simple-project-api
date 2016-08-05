@@ -1,6 +1,5 @@
 package com.simple.admin.controller;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -75,6 +74,8 @@ public class UserController {
 			u.setSalt(salt);
 			u.setUserPhone(userPhone);
 			u.setWeChatNo(wechatNo);
+			u.setUserName(wechatNo);
+			u.setUserNick(wechatNo);
 			u.setPassword(mPassword);
 			u.setChargePrecent(Constant.CHARGE_DEFAULT);
 			u.setAllowSell(Constant.ALLOW_SELL);

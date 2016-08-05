@@ -94,7 +94,7 @@ public class AgentSellerController {
 			Order order = orderService.getOrderByCode(code);
 			int productId = order.getProduct_id();
 			Product product = productService.getById(productId, false);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"设置成功:", product.getOwner());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"设置成功:", product.getOwner());
 		}catch(Exception e) {
 			log.error("绑定失败",e);
 			e.printStackTrace();

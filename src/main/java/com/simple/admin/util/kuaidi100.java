@@ -6,16 +6,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
+import com.ruanwei.tool.SmsClient;
+import com.ruanwei.tool.SmsClientAccessTool;
+
 
 public class kuaidi100
 {
 	
-	public static void main(String[] agrs)
+	public static void getUrl(String com,String no)
 	{
-		
 		try
 		{
-			URL url= new URL("http://api.kuaidi100.com/api?id=a1aadced81e7f03d&com=tiantian&nu=11111&show=2&muti=1&order=desc");
+			URL url= new URL("http://www.kuaidi100.com/applyurl?key=a1aadced81e7f03d&com="+com+"&nu="+no);
 			URLConnection con=url.openConnection();
 			 con.setAllowUserInteraction(false);
 			   InputStream urlStream = url.openStream();
@@ -52,4 +54,9 @@ public class kuaidi100
 		}
 	}
 
+	public static void main(String[] args) {
+		String result = SmsClientAccessTool.getInstance().doAccessHTTPGet("http://www.kuaidi100.com/applyurl?key=a1aadced81e7f03d&com=shunfeng&nu=950265732230", null);
+		System.out.println(result);
+	}
+	
 }
