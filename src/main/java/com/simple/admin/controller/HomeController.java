@@ -194,6 +194,7 @@ public class HomeController {
 					asm.setWatchCount(as.getWatchCount());
 					asm.setSellerPhone(as.getSellerPhone());
 					asm.setWeiChat(as.getSellerName());
+					asm.setChargePercent(as.getChargePercent());
 					pageList.add(asm);
 				}
 			}

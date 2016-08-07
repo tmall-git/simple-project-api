@@ -67,6 +67,9 @@ public class ProductController {
 				double syscharge = getSysCharge();
 				for ( int i = 0 ; i < owners.size() ; i ++) {
 					String owner = owners.get(i);
+					if (owner.equals(seller.getUserPhone())) {
+						continue;
+					}
 					User user = userService.queryByPhone(owner);
 					Map map = getAgentSellerPercent(user,seller);
 					if (!isAllow(map)) {
