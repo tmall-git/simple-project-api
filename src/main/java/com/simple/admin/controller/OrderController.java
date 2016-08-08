@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSONObject;
 import com.ruanwei.tool.SmsClient;
 import com.ruanwei.tool.SmsClientAccessTool;
-import com.ruanwei.tool.SmsResult;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
@@ -28,6 +27,10 @@ import com.simple.model.ResponseStatus;
 import com.simple.model.User;
 import com.simple.service.OrderService;
 import com.simple.service.UserService;
+import com.simple.weixin.auth.OAuthAccessToken;
+import com.simple.weixin.auth.WeiXinAuth;
+import com.simple.weixin.pay.WeiXinPay;
+import com.simple.weixin.pay.WeiXinPrePayResult;
 
 @Controller
 @RequestMapping("/order")
@@ -357,14 +360,19 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "pay",method=RequestMethod.POST)
 	@ResponseBody
-	public String pay(String code,HttpServletRequest request, HttpServletResponse response){
+	public String pay(String code,String orderCode,HttpServletRequest request, HttpServletResponse response){
 		try {
-			//TODO 查询订单金额，跳转微信支付
+			//查询订单金额，跳转微信支付
+			OAuthAccessToken authToken = WeiXinAuth.getOAuthAccessToken(code);
+			if ( null == authToken) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单支付失败：未获取到微信信息，请在微信中打开.", null);
+			}
 			Order order = orderService.getOrderByCode(code);
 			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
 				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
 			}
-			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", null);
+			WeiXinPrePayResult wppr = WeiXinPay.pay(request, authToken.getOpenid(), orderCode, order.getTotal_price());
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", wppr);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:"+e.getLocalizedMessage(), null);
@@ -388,6 +396,25 @@ public class OrderController {
 			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]支付成功,请尽快发货.");
 			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]支付成功,请联系"+order.getOwner()+"尽快发货.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单支付失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 微信支付成功回调地址
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "weixinPaySuccessCallBack",method=RequestMethod.POST)
+	@ResponseBody
+	public String weixinPaySuccessCallBack(HttpServletRequest request, HttpServletResponse response){
+		try {
+			//更新订单信息，并返回列表token
+			WeiXinPay.paySuccess(request, response);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单支付失败:"+e.getLocalizedMessage(), null);
