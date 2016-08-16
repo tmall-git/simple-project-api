@@ -8,5 +8,6 @@
 			<task:scheduled ref="orderTask" method="cancelToSendOrder"  cron="0 */1 * * * ?"/>
 			<task:scheduled ref="orderTask" method="finishOrder"  cron="0 */1 * * * ?"/>
 			<task:scheduled ref="smsTask" method="overage"  cron="0 */1 * * * ?"/>
+			<task:scheduled ref="weixinTask" method="initGlobalAccessToken"  cron="0 */1 * * * ?"/>
 		</task:scheduled-tasks>
 </beans>

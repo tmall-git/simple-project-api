@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -30,6 +31,7 @@ import com.simple.service.UserService;
 import com.simple.weixin.auth.OAuthAccessToken;
 import com.simple.weixin.auth.WeiXinAuth;
 import com.simple.weixin.pay.WeiXinPay;
+import com.simple.weixin.pay.WeiXinPayConfig;
 import com.simple.weixin.pay.WeiXinPrePayResult;
 
 @Controller
@@ -372,14 +374,27 @@ public class OrderController {
 	}
 	
 	/**
+	 * 跳转到微信授权，然后回跳到微信支付页面
+	 * @param code
+	 * @param token
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "toPayPage",method=RequestMethod.GET)
+	public String toPayPage(String code,String token,HttpServletRequest request, HttpServletResponse response) {
+		String url = WeiXinAuth.getAuthUrl("http://easysell.co:8188/api/order/pay?orderCode="+code+"&orderToken="+token, false, "");
+		return "redirect:"+url;
+	}
+	
+	/**
 	 * TODO 订单支付
 	 * @param request
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "pay",method=RequestMethod.POST)
-	@ResponseBody
-	public String pay(String code,String orderCode,HttpServletRequest request, HttpServletResponse response){
+	@RequestMapping(value = "pay",method=RequestMethod.GET)
+	public String pay(String code,String orderCode,String orderToken,HttpServletRequest request, HttpServletResponse response){
 		try {
 			//查询订单金额，跳转微信支付
 			OAuthAccessToken authToken = WeiXinAuth.getOAuthAccessToken(code);
@@ -390,11 +405,39 @@ public class OrderController {
 			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
 				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
 			}
-			WeiXinPrePayResult wppr = WeiXinPay.pay(request, authToken.getOpenid(), orderCode, order.getTotal_price());
-			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", wppr);
+			return "redirect:/comfirm_order.html?code="+orderCode+"&token="+orderToken+"&openId="+authToken.getOpenid();
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * TODO 订单支付
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "payConfig",method=RequestMethod.POST)
+	@ResponseBody
+	public String payConfig(String openId,String code,HttpServletRequest request, HttpServletResponse response){
+		try {
+			if (StringUtils.isEmpty(openId)) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "openId不能为空", null);
+			}
+			Order order = orderService.getOrderByCode(code);
+			if ( null == order ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单号无效", null);
+			}
+			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
+				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
+			}
+			WeiXinPrePayResult wppr = WeiXinPay.pay(request, openId, code, order.getTotal_price());
+			WeiXinPayConfig wc = WeiXinPay.getPayConfig(wppr, request);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "获取支付配置成功", wc);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "获取支付配置成功:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
