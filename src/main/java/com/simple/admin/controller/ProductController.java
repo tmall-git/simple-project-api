@@ -226,7 +226,11 @@ public class ProductController {
 				product.setThumbnail(pi.getImage());
 			}
 			User owner = userService.queryByPhone(product.getOwner());
-			product.setCharge(product.getPrice()*owner.getChargePrecent()/100.00);
+			double percent = owner.getChargePrecent()-agentSellerService.queryCharge();
+			if (percent<0d) {
+				percent = 0d;
+			}
+			product.setCharge(product.getPrice()*percent/100.00);
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){

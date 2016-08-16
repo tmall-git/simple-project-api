@@ -252,8 +252,8 @@ public class OrderController {
 	public String send(String code,String expressCode,String expressNo,String expressName, HttpServletRequest request, HttpServletResponse response){
 		try {
 			Order order = orderService.updateOrderSend(code, expressCode, expressNo, expressName);
-			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已发货.");
-			SmsClient.sendMsg(order.getUser_phone(), "订单["+order.getOrder_no()+"]已发货.");
+			SmsClient.sendMsg(order.getSeller(), "您代销的商品"+order.getProduct_name()+"已发货,订单号为["+order.getOrder_no()+"]");
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品"+order.getProduct_name()+"已发货.请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "发货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -272,8 +272,28 @@ public class OrderController {
 	public String reject(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
 			Order order = orderService.updateReject(code);
-			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已申请退货，请尽快处理.");
-			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]已申请退货，请尽快联系"+order.getSeller()+"处理.");
+			SmsClient.sendMsg(order.getSeller(), "您有一笔退货申请,商品名:"+order.getProduct_name()+",订单号["+order.getOrder_no()+"]请72小时内及时处理.");
+			SmsClient.sendMsg(order.getOwner(), "您代理的商品有一笔退货申请,商品名:"+order.getProduct_name()+",订单号["+order.getOrder_no()+"],请协调买卖双方妥善处理.");
+			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
+		}catch(Exception e) {
+			e.printStackTrace();
+			return AjaxWebUtil.sendAjaxResponse(request, response, false, "退货失败:"+e.getLocalizedMessage(), null);
+		}
+	}
+	
+	/**
+	 * 订单退货成功
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@RequestMapping(value = "rejectSuccess",method=RequestMethod.POST)
+	@ResponseBody
+	public String rejectSuccess(String code,HttpServletRequest request, HttpServletResponse response){
+		try {
+			Order order = orderService.updateRejectSuccess(code);
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的"+order.getProduct_name()+"商品已退货成功,请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getSeller(), "您代销的"+order.getProduct_name()+"商品退货申请已经批准,订单号["+order.getOrder_no()+"],该笔交易无提成.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -292,8 +312,7 @@ public class OrderController {
 	public String rejectRefuse(String code,String remark,HttpServletRequest request, HttpServletResponse response){
 		try {
 			Order order = orderService.updateRejectRefuse(code,remark);
-			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]已拒绝退货.");
-			SmsClient.sendMsg(order.getUser_phone(), "订单["+order.getOrder_no()+"]已拒绝退货.");
+			SmsClient.sendMsg(order.getUser_phone(), "您的退货申请被拒绝,请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -393,8 +412,9 @@ public class OrderController {
 			//更新订单信息，并返回列表token
 			Order order = orderService.updateOrderPaySuccess(code, payAccount,payNo);
 			String token = ProductTokenUtil.getOrderListToken(order.getUser_phone());
-			SmsClient.sendMsg(order.getOwner(), "订单["+order.getOrder_no()+"]支付成功,请尽快发货.");
-			SmsClient.sendMsg(order.getSeller(), "订单["+order.getOrder_no()+"]支付成功,请联系"+order.getOwner()+"尽快发货.");
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品["+order.getProduct_name()+"]已完成支付，订单号为["+order.getOrder_no()+"].点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getOwner(), "有用户购买了您代理的商品["+order.getProduct_name()+"] "+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请于24小时内发货,否则交易将自动取消,收入"+order.getAgent_total_charge()+"元.");
+			SmsClient.sendMsg(order.getSeller(), "有用户购买了您代销的商品["+order.getProduct_name()+"] "+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请及时联系代理["+order.getOwner()+"]发货,收入"+order.getSeller_total_charge()+"元.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
 		}catch(Exception e) {
 			e.printStackTrace();

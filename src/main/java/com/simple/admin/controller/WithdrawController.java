@@ -71,7 +71,7 @@ public class WithdrawController {
 			account.setWeiChatNo(user.getWeChatNo());
 			account.setStatus(Constant.CASH_STATUS_COMMIT);
 			withdrawService.addAccount(account);
-			SmsClient.sendMsg(Constant.ADMIN_PHONE, "提现申请:[申请人："+user.getUserPhone()+"(微信号："+user.getWeChatNo()+"),申请金额："+user.getBalance()+"].");
+			SmsClient.sendAdminMsg("提现申请:[申请人："+user.getUserPhone()+"(微信号："+user.getWeChatNo()+"),申请金额："+user.getBalance()+"].");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "提现成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
