@@ -383,7 +383,7 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "toPayPage",method=RequestMethod.GET)
 	public String toPayPage(String code,String token,HttpServletRequest request, HttpServletResponse response) {
-		String url = WeiXinAuth.getAuthUrl("http://easysell.co:8188/api/order/pay?orderCode="+code+"&orderToken="+token, false, "");
+		String url = WeiXinAuth.getAuthUrl(String.format(EnvPropertiesConfiger.getValue("redirectUrl"),code,token), false, "");
 		return "redirect:"+url;
 	}
 	
@@ -401,11 +401,11 @@ public class OrderController {
 			if ( null == authToken) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单支付失败：未获取到微信信息，请在微信中打开.", null);
 			}
-			Order order = orderService.getOrderByCode(code);
+			Order order = orderService.getOrderByCode(orderCode);
 			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
 				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
 			}
-			return "redirect:/comfirm_order.html?code="+orderCode+"&token="+orderToken+"&openId="+authToken.getOpenid();
+			return "redirect:"+String.format(EnvPropertiesConfiger.getValue("confirmOrderUrl"), orderCode,orderToken,authToken.getOpenid());
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:"+e.getLocalizedMessage(), null);
@@ -450,14 +450,14 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "paySuccess",method=RequestMethod.POST)
 	@ResponseBody
-	public String paySuccess(String code,String payAccount,String payNo,HttpServletRequest request, HttpServletResponse response){
+	public String paySuccess(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
 			//更新订单信息，并返回列表token
-			Order order = orderService.updateOrderPaySuccess(code, payAccount,payNo);
+			Order order = orderService.updateOrderPaySuccess(code);
 			String token = ProductTokenUtil.getOrderListToken(order.getUser_phone());
 			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品["+order.getProduct_name()+"]已完成支付，订单号为["+order.getOrder_no()+"].点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
-			SmsClient.sendMsg(order.getOwner(), "有用户购买了您代理的商品["+order.getProduct_name()+"] "+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请于24小时内发货,否则交易将自动取消,收入"+order.getAgent_total_charge()+"元.");
-			SmsClient.sendMsg(order.getSeller(), "有用户购买了您代销的商品["+order.getProduct_name()+"] "+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请及时联系代理["+order.getOwner()+"]发货,收入"+order.getSeller_total_charge()+"元.");
+			SmsClient.sendMsg(order.getOwner(), "有用户购买了您代理的商品["+order.getProduct_name()+"]"+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请于24小时内发货,否则交易将自动取消,收入"+order.getAgent_total_charge()+"元.");
+			SmsClient.sendMsg(order.getSeller(), "有用户购买了您代销的商品["+order.getProduct_name()+"]"+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请及时联系代理["+order.getOwner()+"]发货,收入"+order.getSeller_total_charge()+"元.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -471,7 +471,7 @@ public class OrderController {
 	 * @param response
 	 * @return
 	 */
-	@RequestMapping(value = "weixinPaySuccessCallBack",method=RequestMethod.POST)
+	@RequestMapping(value = "weixinPaySuccessCallBack",method=RequestMethod.GET)
 	@ResponseBody
 	public String weixinPaySuccessCallBack(HttpServletRequest request, HttpServletResponse response){
 		try {
