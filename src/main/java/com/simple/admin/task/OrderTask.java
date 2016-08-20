@@ -52,7 +52,6 @@ public class OrderTask {
 					SmsClient.sendMsg(order.getUser_phone(), "您购买的"+order.getProduct_name()+"商品因卖家未发货,交易自动取消,请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
 					SmsClient.sendMsg(order.getOwner(), "您有一笔订单因延期未发货被取消交易,商品名："+order.getProduct_name()+",订单号："+order.getOrder_no());
 					SmsClient.sendMsg(order.getSeller(), "您有一笔订单因为卖家延期未发货被取消交易,商品名："+order.getProduct_name()+",订单号："+order.getOrder_no());
-					//TODO 退款给买家
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
