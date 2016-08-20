@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,6 +22,7 @@ import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
 import com.simple.common.util.Base64;
+import com.simple.common.util.ImageHandleUtil;
 import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
 import com.simple.model.PageResult;
@@ -172,7 +174,7 @@ public class ProductController {
 	}
 	
 	private List<ShopProduct> queryShopProduct(List<String> ownerlist,int pageIndex,int pageSize,double percent,double syscharge) {
-		List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize);
+		List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize,true);
 		if ( null != products) {
 			DecimalFormat df=new DecimalFormat(".##");
 			List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
@@ -196,17 +198,13 @@ public class ProductController {
 		return null;
 	}
 	
-	
-	
-	
-	
 	@RequestMapping(value="list",method=RequestMethod.GET)
 	@ResponseBody
 	public String list(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			List<String> owners = new ArrayList<String>();
 			owners.add(LoginUserUtil.getCurrentUser(request).getUserPhone());
-			PageResult products= productService.query(null, owners ,Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize);
+			PageResult products= productService.query(null, owners ,Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize,false);
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", products);
 		}
 		catch (Exception e){
@@ -215,15 +213,25 @@ public class ProductController {
 		}
 	}
 	
-	
 	@RequestMapping(value="info",method=RequestMethod.GET)
 	@ResponseBody
 	public String info(Integer id,HttpServletRequest request, HttpServletResponse response){
 		try {
 			Product product = productService.getById(id,false);
-			ProductImage pi = productService.getImage(id);
-			if ( null != pi ) {
-				product.setThumbnail(pi.getImage());
+			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架", null);
+			}
+			List<ProductImage> pi = productService.getImage(id);
+			if ( null != pi && pi.size() > 0 ) {
+				StringBuffer sb = new StringBuffer();
+				for (int i = 0 ; i < pi.size() ; i ++) {
+					if (i==pi.size()-1) {
+						sb.append(pi.get(i).getImage());
+					}else {
+						sb.append(pi.get(i).getImage()).append(",");
+					}
+				}
+				product.setThumbnail(sb.toString());
 			}
 			User owner = userService.queryByPhone(product.getOwner());
 			double percent = owner.getChargePrecent()-agentSellerService.queryCharge();
@@ -235,7 +243,7 @@ public class ProductController {
 		}
 		catch (Exception e){
 			e.printStackTrace();
-			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
@@ -263,13 +271,13 @@ public class ProductController {
 			p.setTip(tip);
 			p.setProductStatus(productStatus);
 			p.setOwner(LoginUserUtil.getCurrentUser(request).getUserPhone());
-			p.setThumbnail(firstImg);
+			p.setFirstImg(firstImg);
 			productService.insert(p, imges);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"添加成功", null);
 		}catch(Exception e) {
 			log.error("添加失败",e);
 			e.printStackTrace();
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"添加失败", null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"添加失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
@@ -298,7 +306,7 @@ public class ProductController {
 		}catch(Exception e) {
 			log.error("修改失败",e);
 			e.printStackTrace();
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"修改失败", null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"修改失败:"+e.getLocalizedMessage(), null);
 		}
 	}
 	
@@ -306,11 +314,11 @@ public class ProductController {
 	@ResponseBody
 	public String delete(Integer id,HttpServletRequest request, HttpServletResponse response) {
 		try {
-			productService.updateProductStatus(id,Constant.PRODUCT_STATUS_DELETE);
+			productService.updateProductStatus(id,Constant.PRODUCT_STATUS_OFFLINE);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"更新成功", null);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败", e.getMessage());
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败:"+e.getLocalizedMessage(), e.getMessage());
 		}
 	}
 	
@@ -322,6 +330,9 @@ public class ProductController {
 			String token = ProductTokenUtil.getToken(id, user.getUserPhone());
 			//更新用户分享次数
 			Product product = productService.getById(id, false);
+			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架，不能分享", null);
+			}
 			if ( null != product) {
 				agentSellerService.increaseWatchCount(product.getOwner(), user.getUserPhone());
 			}
@@ -342,9 +353,20 @@ public class ProductController {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"token无效", null);
 			}
 			Product product = productService.getById(id,false);
-			ProductImage pi = productService.getImage(id);
-			if ( null != pi ) {
-				product.setThumbnail(pi.getImage());
+			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架，不能购买", null);
+			}
+			List<ProductImage> pi = productService.getImage(id);
+			if ( null != pi && pi.size() > 0 ) {
+				StringBuffer sb = new StringBuffer();
+				for (int i = 0 ; i < pi.size() ; i ++) {
+					if (i==pi.size()-1) {
+						sb.append(pi.get(i).getImage());
+					}else {
+						sb.append(pi.get(i).getImage()).append(",");
+					}
+				}
+				product.setThumbnail(sb.toString());
 			}
 			product.setSellerPhone(seller.getUserPhone());
 			product.setSellerWeChatNo(seller.getWeChatNo());
@@ -352,7 +374,7 @@ public class ProductController {
 		}
 		catch (Exception e){
 			e.printStackTrace();
-			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品成功", null);
+			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品失败"+e.getLocalizedMessage(), null);
 		}
 	}
 	

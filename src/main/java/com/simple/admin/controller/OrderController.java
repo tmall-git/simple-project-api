@@ -237,6 +237,10 @@ public class OrderController {
 		//String prmId = AjaxWebUtil.getRequestParameter(request,"id");
 		Order order = orderService.getOrderByCode(code);
 		order.setProductToken(ProductTokenUtil.getToken(order.getProduct_id(), order.getSeller()));
+		User owner = userService.queryByPhone(order.getOwner());
+		if (null != owner) {
+			order.setSellerWx(owner.getWeChatNo());
+		}
 		if(order == null){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单不存在!", null);
 		}
@@ -271,9 +275,9 @@ public class OrderController {
 	 */
 	@RequestMapping(value = "reject",method=RequestMethod.POST)
 	@ResponseBody
-	public String reject(String code,HttpServletRequest request, HttpServletResponse response){
+	public String reject(String code,int reason,HttpServletRequest request, HttpServletResponse response){
 		try {
-			Order order = orderService.updateReject(code);
+			Order order = orderService.updateReject(code,reason);
 			SmsClient.sendMsg(order.getSeller(), "您有一笔退货申请,商品名:"+order.getProduct_name()+",订单号["+order.getOrder_no()+"]请72小时内及时处理.");
 			SmsClient.sendMsg(order.getOwner(), "您代理的商品有一笔退货申请,商品名:"+order.getProduct_name()+",订单号["+order.getOrder_no()+"],请协调买卖双方妥善处理.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
