@@ -1,6 +1,7 @@
 package com.simple.admin.controller;
 
 import java.io.File;
+import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,11 +36,11 @@ public class ImageUploadController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"上传成功", filepath);
 		}catch(Exception e) {
 			log.error("上传失败",e);
-			return AjaxWebUtil.sendAjaxResponse(request, response, false,"上传失败", e.getLocalizedMessage());
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"上传失败:"+e.getLocalizedMessage(), e.getLocalizedMessage());
 		}
 	}
 	
-	private String getfilepath(String imageData,String subfix,String imagewidth) {
+	private String getfilepath(String imageData,String subfix,String imagewidth) throws IOException {
 		if (StringUtils.isEmpty(subfix)) {
 			subfix = "jpg";
 		}
@@ -52,7 +53,7 @@ public class ImageUploadController {
 				}catch(Exception e) {
 				}
 				if (width>0) {
-					ImageHandleUtil.img_change(b1SrcFile, width);
+					ImageHandleUtil.cutImage(b1SrcFile, width);
 					return ImageHandleUtil.getScaleFilePath(b1SrcFile.getPath(),width);
 				}
 			}

@@ -14,7 +14,7 @@ public class SmsTask {
 			SmsClient.sendAdminMsg("短信查询余额接口调用失败：请查询系统日志");
 		}else {
 			try {
-				int count = (Integer)sr.getData();
+				int count = Integer.parseInt((String)sr.getData());
 				if (count<=500) {
 					SmsClient.sendAdminMsg("短信余额小于500,请尽快充值");
 				}

@@ -273,13 +273,18 @@ public class OrderController {
 		try {
 			Order order = orderService.updateOrderSend(code, expressCode, expressNo, expressName);
 			SmsClient.sendMsg(order.getSeller(), "您代销的商品"+order.getProduct_name()+"已发货,订单号为["+order.getOrder_no()+"]");
-			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品"+order.getProduct_name()+"已发货.请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品"+order.getProduct_name()+"已发货.请点击查看详情"+toMyOrderUrl(order.getUser_phone()));
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "发货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "发货失败:"+e.getLocalizedMessage(), null);
 		}
 	}
+	
+	private String toMyOrderUrl(String phone) {
+		return EnvPropertiesConfiger.getValue("orderDeatilUrl")+ProductTokenUtil.getOrderListToken(phone);
+	}
+	
 	
 	/**
 	 * 订单退货
@@ -312,7 +317,7 @@ public class OrderController {
 	public String rejectSuccess(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
 			Order order = orderService.updateRejectSuccess(code);
-			SmsClient.sendMsg(order.getUser_phone(), "您购买的"+order.getProduct_name()+"商品已退货成功,请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的"+order.getProduct_name()+"商品已退货成功,请点击查看详情"+toMyOrderUrl(order.getUser_phone()));
 			SmsClient.sendMsg(order.getSeller(), "您代销的"+order.getProduct_name()+"商品退货申请已经批准,订单号["+order.getOrder_no()+"],该笔交易无提成.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
@@ -332,7 +337,7 @@ public class OrderController {
 	public String rejectRefuse(String code,String remark,HttpServletRequest request, HttpServletResponse response){
 		try {
 			Order order = orderService.updateRejectRefuse(code,remark);
-			SmsClient.sendMsg(order.getUser_phone(), "您的退货申请被拒绝,请点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getUser_phone(), "您的退货申请被拒绝,请点击查看详情"+toMyOrderUrl(order.getUser_phone()));
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "退货成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -473,7 +478,7 @@ public class OrderController {
 			//更新订单信息，并返回列表token
 			Order order = orderService.updateOrderPaySuccess(code);
 			String token = ProductTokenUtil.getOrderListToken(order.getUser_phone());
-			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品["+order.getProduct_name()+"]已完成支付，订单号为["+order.getOrder_no()+"].点击查看详情"+EnvPropertiesConfiger.getValue("orderDeatilUrl")+order.getOrder_no());
+			SmsClient.sendMsg(order.getUser_phone(), "您购买的商品["+order.getProduct_name()+"]已完成支付，订单号为["+order.getOrder_no()+"].点击查看详情"+toMyOrderUrl(order.getUser_phone()));
 			SmsClient.sendMsg(order.getOwner(), "有用户购买了您代理的商品["+order.getProduct_name()+"]"+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请于24小时内发货,否则交易将自动取消,收入"+order.getAgent_total_charge()+"元.");
 			SmsClient.sendMsg(order.getSeller(), "有用户购买了您代销的商品["+order.getProduct_name()+"]"+order.getProduct_count()+"个,订单号["+order.getOrder_no()+"].请及时联系代理["+order.getOwner()+"]发货,收入"+order.getSeller_total_charge()+"元.");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单支付成功", token);
