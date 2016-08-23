@@ -1,5 +1,6 @@
 package com.simple.admin.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,7 +59,7 @@ public class OrderController {
 			//String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
 			//String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_TOSEND, null, null, pageIndex, pageSize);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_TOSEND, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -79,7 +80,7 @@ public class OrderController {
 	public String sendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_SEND, null, null, pageIndex, pageSize);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_SEND, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -99,7 +100,11 @@ public class OrderController {
 	public String finishedList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, Constant.ORDER_STATUS_FINISHED, null, null, pageIndex, pageSize);
+			List<Integer> status = new ArrayList<Integer>();
+			status.add(Constant.ORDER_STATUS_CANCEL);
+			status.add(Constant.ORDER_STATUS_FINISHED);
+			status.add(Constant.ORDER_STATUS_REGECT_FINISHED);
+			List<Order> orderList = orderService.queryListByStatus(user.getUserPhone(), null, status, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -144,7 +149,7 @@ public class OrderController {
 			//String pageIndex = AjaxWebUtil.getRequestParameter(request,"pageIndex");
 			//String pageSize = AjaxWebUtil.getRequestParameter(request,"pageSize");
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_TOSEND, null, null, pageIndex, pageSize);
+			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_TOSEND, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -165,7 +170,7 @@ public class OrderController {
 	public String sellerSendList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(null, user.getUserPhone(), Constant.ORDER_STATUS_SEND, null, null, pageIndex, pageSize);
+			List<Order> orderList = orderService.queryListByStatus(null, user.getUserPhone(), Constant.ORDER_STATUS_SEND, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -185,7 +190,12 @@ public class OrderController {
 	public String sellerFinishedList(int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_FINISHED, null, null, pageIndex, pageSize);
+			//List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  Constant.ORDER_STATUS_FINISHED, null, null, pageIndex, pageSize);
+			List<Integer> status = new ArrayList<Integer>();
+			status.add(Constant.ORDER_STATUS_CANCEL);
+			status.add(Constant.ORDER_STATUS_FINISHED);
+			status.add(Constant.ORDER_STATUS_REGECT_FINISHED);
+			List<Order> orderList = orderService.queryListByStatus(null,user.getUserPhone(),  status, null, null, pageIndex, pageSize,true);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", orderList);
 		}catch(Exception e) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "查询失败："+e.getLocalizedMessage(), null);
@@ -239,7 +249,11 @@ public class OrderController {
 		order.setProductToken(ProductTokenUtil.getToken(order.getProduct_id(), order.getSeller()));
 		User owner = userService.queryByPhone(order.getOwner());
 		if (null != owner) {
-			order.setSellerWx(owner.getWeChatNo());
+			order.setOwnerWx(owner.getWeChatNo());
+		}
+		User seller = userService.queryByPhone(order.getSeller());
+		if (null != seller) {
+			order.setSellerWx(seller.getWeChatNo());
 		}
 		if(order == null){
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单不存在!", null);

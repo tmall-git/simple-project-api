@@ -61,7 +61,7 @@ public class HomeController {
 			Double charge = orderService.queryAgentTotalCharge(phone,null,null);
 			Double total = orderService.queryAgentTotalPrice(phone,null,null);
 			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance(),phone));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -83,7 +83,7 @@ public class HomeController {
 			Double charge = orderService.querySellerTotalCharge(null,phone);
 			Double total = orderService.querySellerTotalPrice(null,phone,null,null);
 			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBalance(),phone));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -187,7 +187,8 @@ public class HomeController {
 				for (int i = 0 ; i < asllers.size() ; i ++)  {
 					AgentSeller as = asllers.get(i);
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),Constant.ORDER_STATUS_FINISHED,null,null);
+					//查看订单笔数，除了未付款的或者付款了取消的
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
 					AgentSellerMain asm = new AgentSellerMain();
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);

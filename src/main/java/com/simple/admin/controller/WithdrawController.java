@@ -43,7 +43,7 @@ public class WithdrawController {
 		User user = LoginUserUtil.getCurrentUser(request);
 		List<Bank> bankList = baseService.getBankList();
 		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("account", user.getBalance());
+		data.put("account", user.getBlance());
 		data.put("bankList", bankList);
 		return AjaxWebUtil.sendAjaxResponse(request, response, true, "查找成功", JSON.toJSONString(data));
 	}
@@ -67,11 +67,11 @@ public class WithdrawController {
 			account.setUserPhone(user.getUserPhone());
 			account.setBankPhone(bankPhone);
 			account.setCashTime(new Timestamp(new Date().getTime()));
-			account.setCashAmount(user.getBalance());
+			account.setCashAmount(user.getBlance());
 			account.setWeiChatNo(user.getWeChatNo());
 			account.setStatus(Constant.CASH_STATUS_COMMIT);
 			withdrawService.addAccount(account);
-			SmsClient.sendAdminMsg("提现申请:[申请人："+user.getUserPhone()+"(微信号："+user.getWeChatNo()+"),申请金额："+user.getBalance()+"].");
+			SmsClient.sendAdminMsg("提现申请:[申请人："+user.getUserPhone()+"(微信号："+user.getWeChatNo()+"),申请金额："+user.getBlance()+"].");
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "提现成功", null);
 		}catch(Exception e) {
 			e.printStackTrace();

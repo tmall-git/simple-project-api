@@ -1,5 +1,6 @@
 package com.simple.admin.controller;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -238,13 +239,19 @@ public class ProductController {
 			if (percent<0d) {
 				percent = 0d;
 			}
-			product.setCharge(product.getPrice()*percent/100.00);
+			
+			product.setCharge(formatPrice(product.getPrice()*percent/100.00));
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){
 			e.printStackTrace();
 			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品失败:"+e.getLocalizedMessage(), null);
 		}
+	}
+	
+	private double formatPrice(double price) {
+		BigDecimal bg = new BigDecimal(price);
+        return bg.setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
 	}
 	
 	@RequestMapping(value = "add",method=RequestMethod.POST)
