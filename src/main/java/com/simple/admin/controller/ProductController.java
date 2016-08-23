@@ -23,6 +23,7 @@ import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
 import com.simple.common.util.Base64;
+import com.simple.common.util.DoubleUtil;
 import com.simple.common.util.ImageHandleUtil;
 import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
@@ -177,19 +178,18 @@ public class ProductController {
 	private List<ShopProduct> queryShopProduct(List<String> ownerlist,int pageIndex,int pageSize,double percent,double syscharge) {
 		List<Product> products = productService.queryList(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE, pageIndex, pageSize,true);
 		if ( null != products) {
-			DecimalFormat df=new DecimalFormat(".##");
 			List<ShopProduct>  shopProducts = new ArrayList<ShopProduct>();
 			for ( int j = 0 ; j < products.size() ; j ++) {
 				Product p = products.get(j);
 				ShopProduct sp = new ShopProduct();
 				sp.setProductName(p.getName());
-				sp.setPrice(df.format(p.getPrice()));
+				sp.setPrice(String.valueOf(DoubleUtil.formatDouble((p.getPrice()))));
 				sp.setImage(p.getFirstImg());
 				double chargedouble = p.getPrice()*(percent-syscharge)/100.00;
 				if (chargedouble<0) {
 					chargedouble = 0d;
 				}
-				sp.setCharge(df.format(chargedouble));
+				sp.setCharge(String.valueOf(DoubleUtil.formatPrice(chargedouble)));
 				sp.setStock(p.getStock());
 				sp.setId(p.getId());
 				shopProducts.add(sp);
@@ -240,18 +240,13 @@ public class ProductController {
 				percent = 0d;
 			}
 			
-			product.setCharge(formatPrice(product.getPrice()*percent/100.00));
+			product.setCharge(DoubleUtil.formatPrice(product.getPrice()*percent/100.00));
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){
 			e.printStackTrace();
 			return  AjaxWebUtil.sendAjaxResponse(request, response, false,"查询产品失败:"+e.getLocalizedMessage(), null);
 		}
-	}
-	
-	private double formatPrice(double price) {
-		BigDecimal bg = new BigDecimal(price);
-        return bg.setScale(2, BigDecimal.ROUND_DOWN).doubleValue();
 	}
 	
 	@RequestMapping(value = "add",method=RequestMethod.POST)
