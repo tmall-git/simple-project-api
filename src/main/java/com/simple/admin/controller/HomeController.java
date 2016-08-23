@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.common.util.DateUtil;
+import com.simple.common.util.DoubleUtil;
 import com.simple.constant.Constant;
 import com.simple.model.AgentHome;
 import com.simple.model.AgentSeller;
@@ -102,8 +103,12 @@ public class HomeController {
 	public String modifyPwd(HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
-			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_TOSEND,null,null);
-			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,Constant.ORDER_STATUS_REGECT,null,null);
+			List<Integer> daifahuol = new ArrayList<Integer>();
+			daifahuol.add(Constant.ORDER_STATUS_TOSEND);
+			Integer daifahuo = orderService.queryCountByStatus(user.getUserPhone(),null,daifahuol,null,null,true);
+			List<Integer> tuihuozhongl = new ArrayList<Integer>();
+			tuihuozhongl.add(Constant.ORDER_STATUS_REGECT);
+			Integer tuihuozhong = orderService.queryCountByStatus(user.getUserPhone(),null,tuihuozhongl,null,null,true);
 			Integer sellproduct = productService.queryProductCount(Constant.PRODUCT_STATUS_ONLINE, user.getUserPhone());
 			Integer nostock = productService.queryNoStockCount(user.getUserPhone());
 			Integer totalSellers = agentSellerService.queryCountByPhone(user.getUserPhone(),null);
@@ -130,9 +135,13 @@ public class HomeController {
 		try {
 			User user = LoginUserUtil.getCurrentUser(request);
 			//待发货
-			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_TOSEND,null,null);
+			List<Integer> daifahuol = new ArrayList<Integer>();
+			daifahuol.add(Constant.ORDER_STATUS_TOSEND);
+			int daifahuo = orderService.queryCountByStatus(null,user.getUserPhone(),daifahuol,null,null,true);
 			//退货中
-			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),Constant.ORDER_STATUS_REGECT,null,null);
+			List<Integer> tuihuozhongl = new ArrayList<Integer>();
+			tuihuozhongl.add(Constant.ORDER_STATUS_REGECT);
+			int tuihuozhong = orderService.queryCountByStatus(null,user.getUserPhone(),tuihuozhongl,null,null,true);
 			//代销店铺总数
 			int count = agentSellerService.queryCountByPhone(null, user.getUserPhone());
 			List<AgentSeller> asllers = agentSellerService.queryListByPhone(null, user.getUserPhone(),pageIndex,pageSize);
@@ -145,7 +154,13 @@ public class HomeController {
 						continue;
 					}
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
+					List<Integer> orderstatus = new ArrayList<Integer>();
+					orderstatus.add(Constant.ORDER_STATUS_FINISHED);
+					orderstatus.add(Constant.ORDER_STATUS_REGECT);
+					orderstatus.add(Constant.ORDER_STATUS_REGECT_REFUSE);
+					orderstatus.add(Constant.ORDER_STATUS_SEND);
+					orderstatus.add(Constant.ORDER_STATUS_TOSEND);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),orderstatus,null,null,true);
 					Integer productCount = orderService.queryProductCount(as.getAgentPhone(),as.getSellerPhone(),-1);
 					SellerListVO sv = new SellerListVO();
 					sv.setDealCount(orderCount);
@@ -188,7 +203,13 @@ public class HomeController {
 					AgentSeller as = asllers.get(i);
 					Double charge = orderService.querySellerTotalPrice(as.getAgentPhone(),as.getSellerPhone(),null,null);
 					//查看订单笔数，除了未付款的或者付款了取消的
-					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),-1,null,null);
+					List<Integer> orderstatus = new ArrayList<Integer>();
+					orderstatus.add(Constant.ORDER_STATUS_FINISHED);
+					orderstatus.add(Constant.ORDER_STATUS_REGECT);
+					orderstatus.add(Constant.ORDER_STATUS_REGECT_REFUSE);
+					orderstatus.add(Constant.ORDER_STATUS_SEND);
+					orderstatus.add(Constant.ORDER_STATUS_TOSEND);
+					Integer orderCount = orderService.queryCountByStatus(as.getAgentPhone(),as.getSellerPhone(),orderstatus,null,null,true);
 					AgentSellerMain asm = new AgentSellerMain();
 					asm.setOrderCount(orderCount==null?0:orderCount);
 					asm.setTotalSell(charge==null?0d:charge);
@@ -257,7 +278,7 @@ public class HomeController {
 			if ( null == totalWatchCount || totalWatchCount == 0) {
 				totalWatchCount = 1;
 			}
-			result.put("totalWatchPercent", (totalSellerWatchCount/totalWatchCount)*100.00);
+			result.put("totalWatchPercent", DoubleUtil.formatDouble((totalSellerWatchCount*1.00/totalWatchCount*1.00)*100.00));
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
@@ -310,7 +331,7 @@ public class HomeController {
 	
 	private Map getSellerBussinessMap(String owner,String seller,HttpServletRequest request,String begin,String end,boolean needsPercent) {
 		Map result = new HashMap();
-		
+		System.out.println("begin:"+begin+">>>>end:"+end);
 		//总代销额
 		Double totalSellercharge = orderService.querySellerTotalPrice(owner,seller,begin,end);
 		if ( null == totalSellercharge ) {
@@ -323,19 +344,25 @@ public class HomeController {
 			if ( null == totalCharge || totalCharge==0) {
 				totalCharge = 1.00;
 			}
-			result.put("totalSellPercent",(totalSellercharge/totalCharge)*100.00);
+			result.put("totalSellPercent",DoubleUtil.formatDouble((totalSellercharge*1.00/totalCharge*1.00)*100.00));
 		}
 		//订单总数
-		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,-1,begin,end);
+		List<Integer> orderstatus = new ArrayList<Integer>();
+		orderstatus.add(Constant.ORDER_STATUS_FINISHED);
+		orderstatus.add(Constant.ORDER_STATUS_REGECT);
+		orderstatus.add(Constant.ORDER_STATUS_REGECT_REFUSE);
+		orderstatus.add(Constant.ORDER_STATUS_SEND);
+		orderstatus.add(Constant.ORDER_STATUS_TOSEND);
+		Integer totalSellerOrderCount = orderService.queryCountByStatus(owner,seller,orderstatus,begin,end,true);
 		if (totalSellerOrderCount==null) totalSellerOrderCount=0;
 		result.put("totalOrderCount", totalSellerOrderCount);
 		if (needsPercent) {
 			//订单总数团队占比
-			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,-1,begin,end);
+			Integer totalOrderCount = orderService.queryCountByStatus(owner,null,orderstatus,begin,end,true);
 			if ( null == totalOrderCount || totalOrderCount ==0) {
 				totalOrderCount = 1;
 			}
-			result.put("totalOrderCountPercent", (totalSellerOrderCount/totalOrderCount)*100.00);
+			result.put("totalOrderCountPercent", DoubleUtil.formatDouble((totalSellerOrderCount*1.00/totalOrderCount*1.00)*100.00));
 		}
 		return result;
 	}
