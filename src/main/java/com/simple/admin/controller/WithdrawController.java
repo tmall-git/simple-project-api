@@ -121,6 +121,10 @@ public class WithdrawController {
 			if ( null == account ) {
 				AjaxWebUtil.sendAjaxResponse(request, response, false, "提现记录不存在", account);
 			}
+			Bank bank = baseService.queryBank(account.getBankCode());
+			if ( null != bank ) {
+				account.setBankName(bank.getName());
+			}
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", account);
 		}catch(Exception e) {
 			e.printStackTrace();
@@ -141,10 +145,6 @@ public class WithdrawController {
 			}
 			User user = LoginUserUtil.getCurrentUser(request);
 			Account account = withdrawService.queryById(id);
-			Bank bank = baseService.queryBank(account.getBankCode());
-			if ( null != bank ) {
-				account.setBankName(bank.getName());
-			}
 			account.setUserPhone(phone);
 			withdrawService.updateAccountPhone(account);
 			SmsClient.sendAdminMsg("提现申请:[申请人："+user.getUserPhone()+"(微信号："+user.getWeChatNo()+"),申请金额："+user.getBlance()+"].");
