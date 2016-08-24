@@ -393,6 +393,7 @@ public class HomeController {
 			result.put("name", owenrUser.getUserName());
 			Double charge = orderService.querySellerTotalPrice(owner,null,null,null);
 			result.put("totalSell", charge==null?0d:charge);
+			result.put("nickName", owenrUser.getUserNick());
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
