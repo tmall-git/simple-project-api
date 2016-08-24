@@ -72,10 +72,10 @@ public class AgentSellerController {
 		User user = userService.queryByPhone(owner);
 		AgentSeller as = new AgentSeller();
 		as.setSellerPhone(seller);
-		as.setSellerName(sellerWeiChat);
+		//as.setSellerName(sellerWeiChat);
 		as.setAgentPhone(owner);
 		as.setChargePercent(user.getChargePrecent());
-		as.setAgentName(user.getWeChatNo());
+		//as.setAgentName(user.getWeChatNo());
 		agentSellerService.add(as);
 		return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
 	}

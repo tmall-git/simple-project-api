@@ -167,7 +167,11 @@ public class HomeController {
 					sv.setProductCount(productCount);
 					sv.setSellerAmount(charge==null?0d:charge);
 					sv.setUserPhone(as.getAgentPhone());
-					sv.setWechatName(as.getAgentName());
+					User agent = userService.queryByPhone(as.getAgentPhone());
+					if (null != agent) {
+						sv.setWechatName(agent.getWeChatNo());
+						sv.setNickName(agent.getUserNick());
+					}
 					pageList.add(sv);
 				}
 				sm.setShops(pageList);
@@ -215,8 +219,12 @@ public class HomeController {
 					asm.setTotalSell(charge==null?0d:charge);
 					asm.setWatchCount(as.getWatchCount());
 					asm.setSellerPhone(as.getSellerPhone());
-					asm.setWeiChat(as.getSellerName());
 					asm.setChargePercent(as.getChargePercent());
+					User seller = userService.queryByPhone(as.getSellerPhone());
+					if (null != seller ) {
+						asm.setWeiChat(seller.getWeChatNo());
+						asm.setNickName(seller.getUserNick());
+					}
 					pageList.add(asm);
 				}
 			}
