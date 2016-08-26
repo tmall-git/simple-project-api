@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
+import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
 import com.simple.model.Order;
 import com.simple.model.Product;
@@ -69,7 +70,13 @@ public class AgentSellerController {
 		if (count > 0 ) {
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"绑定成功", null);
 		}
-		User user = userService.queryByPhone(owner);
+		User user = userService.queryByPhone(owner,false);
+		if (null == user ) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"绑定失败：该代理不存在", null);
+		}
+		if (user.getStatus() != Constant.USER_STATUS_VALID ) {
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"绑定失败：该代理已被封号", null);
+		}
 		AgentSeller as = new AgentSeller();
 		as.setSellerPhone(seller);
 		//as.setSellerName(sellerWeiChat);

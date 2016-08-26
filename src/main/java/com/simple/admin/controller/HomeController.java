@@ -61,8 +61,14 @@ public class HomeController {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
 			Double charge = orderService.queryAgentTotalCharge(phone,null,null);
 			Double total = orderService.queryAgentTotalPrice(phone,null,null);
-			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone));
+			User user = userService.queryByPhone(phone,false);
+			if ( null == user ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"账户不存在", null);
+			}
+			if ( user.getStatus() != Constant.USER_STATUS_VALID ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"账户已被封号", null);
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone,user.getUserNick(),user.getHeadimg()));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -83,8 +89,14 @@ public class HomeController {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
 			Double charge = orderService.querySellerTotalCharge(null,phone);
 			Double total = orderService.querySellerTotalPrice(null,phone,null,null);
-			User user = userService.queryByPhone(phone);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone));
+			User user = userService.queryByPhone(phone,false);
+			if ( null == user ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"账户不存在", null);
+			}
+			if ( user.getStatus() != Constant.USER_STATUS_VALID ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"账户已被封号", null);
+			}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", new UserSellCount(total,charge,user.getBlance(),phone,user.getUserNick(),user.getHeadimg()));
 		}catch(Exception e) {
 			log.error("查询失败",e);
 			e.printStackTrace();
@@ -167,10 +179,11 @@ public class HomeController {
 					sv.setProductCount(productCount);
 					sv.setSellerAmount(charge==null?0d:charge);
 					sv.setUserPhone(as.getAgentPhone());
-					User agent = userService.queryByPhone(as.getAgentPhone());
+					User agent = userService.queryByPhone(as.getAgentPhone(),false);
 					if (null != agent) {
 						sv.setWechatName(agent.getWeChatNo());
 						sv.setNickName(agent.getUserNick());
+						sv.setHeadimg(agent.getHeadimg());
 					}
 					pageList.add(sv);
 				}
@@ -220,10 +233,11 @@ public class HomeController {
 					asm.setWatchCount(as.getWatchCount());
 					asm.setSellerPhone(as.getSellerPhone());
 					asm.setChargePercent(as.getChargePercent());
-					User seller = userService.queryByPhone(as.getSellerPhone());
+					User seller = userService.queryByPhone(as.getSellerPhone(),false);
 					if (null != seller ) {
 						asm.setWeiChat(seller.getWeChatNo());
 						asm.setNickName(seller.getUserNick());
+						asm.setHeadimg(seller.getHeadimg());
 					}
 					pageList.add(asm);
 				}
@@ -247,11 +261,12 @@ public class HomeController {
 	public String sellerBussinessHeader(String seller,HttpServletRequest request, HttpServletResponse response) {
 		try {
 			User owner = LoginUserUtil.getCurrentUser(request);
-			User sellerUser = userService.queryByPhone(seller);
+			User sellerUser = userService.queryByPhone(seller,false);
 			Map result = new HashMap();
 			result.put("weChat", sellerUser.getWeChatNo());
 			result.put("phone", sellerUser.getUserPhone());
 			result.put("name", sellerUser.getUserName());
+			result.put("headimg", sellerUser.getHeadimg());
 			Double charge = orderService.querySellerTotalPrice(owner.getUserPhone(),seller,null,null);
 			result.put("totalSell", charge==null?0d:charge);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "查询成功", result);
@@ -386,11 +401,12 @@ public class HomeController {
 	@ResponseBody
 	public String agentShop(String owner,HttpServletRequest request, HttpServletResponse response) {
 		try {
-			User owenrUser = userService.queryByPhone(owner);
+			User owenrUser = userService.queryByPhone(owner,false);
 			Map result = new HashMap();
 			result.put("weChat", owenrUser.getWeChatNo());
 			result.put("phone", owenrUser.getUserPhone());
 			result.put("name", owenrUser.getUserName());
+			result.put("headimg", owenrUser.getHeadimg());
 			Double charge = orderService.querySellerTotalPrice(owner,null,null,null);
 			result.put("totalSell", charge==null?0d:charge);
 			result.put("nickName", owenrUser.getUserNick());

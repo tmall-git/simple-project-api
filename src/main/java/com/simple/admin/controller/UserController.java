@@ -41,7 +41,7 @@ public class UserController {
 	public String getValidateCode(HttpServletRequest request, HttpServletResponse response){
 		try {
 			String phone = LoginUserUtil.getCurrentUser(request).getUserPhone();
-			User user = userService.queryByPhone(phone);
+			User user = userService.queryByPhone(phone,true);
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询成功", user);
 		}
 		catch (Exception e){
@@ -57,11 +57,9 @@ public class UserController {
 			String validateCode = AjaxWebUtil.getRequestParameter(request,"validateCode");
 			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
 			String wechatNo = AjaxWebUtil.getRequestParameter(request,"wechatNo",true);
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("userPhone", userPhone);
-			if(checkUserUnique("user.selectOne",params)){
-				return AjaxWebUtil.sendAjaxResponse(request, response, false,"重复的用户", null);
-			};
+			if(checkUserUnique(userPhone)){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"手机号已被注册", null);
+			}
 			if(password == null){
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"密码不能为空", null);
 			}
@@ -79,6 +77,7 @@ public class UserController {
 			u.setPassword(mPassword);
 			u.setChargePrecent(Constant.CHARGE_DEFAULT);
 			u.setAllowSell(Constant.ALLOW_SELL);
+			u.setStatus(Constant.USER_STATUS_VALID);
 			userService.insert(u);
 			LoginUserUtil.setCurrentUser(request, u);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"注册成功", null);
@@ -121,11 +120,12 @@ public class UserController {
 			if(!validateCode.equals(cacheValidateCode.get(userPhone))){
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"验证码错误", null);
 			}
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("userPhone", userPhone);
-			User user = userService.selectOne("user.selectOne", params);
+			User user = userService.queryByPhone(userPhone,false);
 			if ( null == user ) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在", null);
+			}
+			if ( user.getStatus() != Constant.USER_STATUS_VALID ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"该帐号已被封号,不能修改", null);
 			}
 			String salt = user.getSalt();
 			String mPassword = MD5Util.MD5Encode(newPassword, salt);
@@ -151,9 +151,13 @@ public class UserController {
 			String prmUserNick = AjaxWebUtil.getRequestParameter(request,"userNick",true);
 			String userName = AjaxWebUtil.getRequestParameter(request,"userName",true);
 			String prmCategory = AjaxWebUtil.getRequestParameter(request,"category",true);
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("userPhone", userPhone);
-			User user = userService.selectOne("user.selectOne", params);
+			User user = userService.queryByPhone(userPhone, false);
+			if ( null == user ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在", null);
+			}
+			if ( user.getStatus() != Constant.USER_STATUS_VALID ) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"该帐号已被封号,不能修改", null);
+			}
 			user.setWeChatNo(prmWechatNo);
 			user.setUserNick(prmUserNick);
 			user.setUserName(userName);
@@ -167,12 +171,10 @@ public class UserController {
 		}
 	}
 	
-	private boolean checkUserUnique(String statement, Map<String, Object> params) {
-		User user = userService.selectOne(statement, params);
+	private boolean checkUserUnique(String phone) {
+		User user = userService.queryByPhone(phone, false);
 		if(user != null){
-			if(StringUtils.isNotEmpty(user.getUserPhone())){
-				return true;
-			}
+			return true;
 		}
 		return false;
 	}

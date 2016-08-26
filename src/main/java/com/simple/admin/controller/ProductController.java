@@ -74,7 +74,10 @@ public class ProductController {
 					if (owner.equals(seller.getUserPhone())) {
 						continue;
 					}
-					User user = userService.queryByPhone(owner);
+					User user = userService.queryByPhone(owner,true);
+					if ( null == user ) {
+						continue;
+					}
 					Map map = getAgentSellerPercent(user,seller);
 					if (!isAllow(map)) {
 						continue;
@@ -83,6 +86,7 @@ public class ProductController {
 					sl.setOwner(owner);
 					sl.setOwnerName(user.getWeChatNo());
 					sl.setZhuying(user.getCategory());
+					sl.setHeadimg(user.getHeadimg());
 					List<String> ownerlist = new ArrayList<String>();
 					ownerlist.add(owner);
 					int productCount = productService.queryCount(null, ownerlist, Constant.PRODUCT_STATUS_ONLINE);
@@ -114,7 +118,10 @@ public class ProductController {
 	public String productPhonelist(String owner,int pageIndex,int pageSize,HttpServletRequest request, HttpServletResponse response){
 		try {
 			User seller = LoginUserUtil.getCurrentUser(request);
-			User user = userService.queryByPhone(owner);
+			User user = userService.queryByPhone(owner,true);
+			if ( null == user){
+				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"该代理帐号无效", null);
+			}
 			Map map = getAgentSellerPercent(user,seller);
 			if (!isAllow(map)) {
 				return  AjaxWebUtil.sendAjaxResponse(request, response, false,"该代理禁止代销啦", null);
@@ -234,7 +241,10 @@ public class ProductController {
 				}
 				product.setThumbnail(sb.toString());
 			}
-			User owner = userService.queryByPhone(product.getOwner());
+			User owner = userService.queryByPhone(product.getOwner(),true);
+			if ( null == owner) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"该产品代理无效", null);
+			}
 			double percent = owner.getChargePrecent()-agentSellerService.queryCharge();
 			if (percent<0d) {
 				percent = 0d;
@@ -350,9 +360,12 @@ public class ProductController {
 	public String info(Integer id,String token,HttpServletRequest request, HttpServletResponse response){
 		try {
 			String sellerPhone = ProductTokenUtil.validToken(id, token);
-			User seller = userService.queryByPhone(sellerPhone);
-			if (null == seller) {
+			if (StringUtils.isEmpty(sellerPhone)) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"token无效", null);
+			}
+			User seller = userService.queryByPhone(sellerPhone,true);
+			if (null == seller) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"代销账户无效", null);
 			}
 			Product product = productService.getById(id,false);
 			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
@@ -372,6 +385,8 @@ public class ProductController {
 			}
 			product.setSellerPhone(seller.getUserPhone());
 			product.setSellerWeChatNo(seller.getWeChatNo());
+			product.setSellerNickName(seller.getUserNick());
+			product.setHeadimg(seller.getHeadimg());
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){

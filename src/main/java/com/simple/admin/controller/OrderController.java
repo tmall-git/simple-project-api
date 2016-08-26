@@ -247,11 +247,11 @@ public class OrderController {
 		//String prmId = AjaxWebUtil.getRequestParameter(request,"id");
 		Order order = orderService.getOrderByCode(code);
 		order.setProductToken(ProductTokenUtil.getToken(order.getProduct_id(), order.getSeller()));
-		User owner = userService.queryByPhone(order.getOwner());
+		User owner = userService.queryByPhone(order.getOwner(),false);
 		if (null != owner) {
 			order.setOwnerWx(owner.getWeChatNo());
 		}
-		User seller = userService.queryByPhone(order.getSeller());
+		User seller = userService.queryByPhone(order.getSeller(),false);
 		if (null != seller) {
 			order.setSellerWx(seller.getWeChatNo());
 		}
@@ -384,9 +384,9 @@ public class OrderController {
 			if ( null == phone) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:token无效", null);
 			}
-			User seller = userService.queryByPhone(phone);
+			User seller = userService.queryByPhone(phone,true);
 			if ( null == seller ) {
-				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:代销不存在", null);
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:代销无效", null);
 			}
 			String ordeNo = orderService.addOrder(orderForm,phone);
 			return AjaxWebUtil.sendAjaxResponse(request, response, true, "订单创建成功", ordeNo);
@@ -411,7 +411,7 @@ public class OrderController {
 	}
 	
 	/**
-	 * TODO 订单支付
+	 * 订单支付
 	 * @param request
 	 * @param response
 	 * @return
@@ -436,7 +436,7 @@ public class OrderController {
 	}
 	
 	/**
-	 * TODO 订单支付
+	 * 订单支付
 	 * @param request
 	 * @param response
 	 * @return
