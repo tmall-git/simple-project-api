@@ -84,7 +84,8 @@ public class ProductController {
 					}
 					ShopList sl = new ShopList();
 					sl.setOwner(owner);
-					sl.setOwnerName(user.getWeChatNo());
+					//sl.setOwnerName(user.getWeChatNo());
+					sl.setOwnerName(user.getUserNick());
 					sl.setZhuying(user.getCategory());
 					sl.setHeadimg(user.getHeadimg());
 					List<String> ownerlist = new ArrayList<String>();
@@ -249,8 +250,21 @@ public class ProductController {
 			if (percent<0d) {
 				percent = 0d;
 			}
+			String token = request.getParameter("token");
+			if (!StringUtils.isEmpty(token)) {
+				String sellerPhone = ProductTokenUtil.validToken(id, token);
+				if (StringUtils.isEmpty(sellerPhone)) {
+					return AjaxWebUtil.sendAjaxResponse(request, response, false,"token无效", null);
+				}
+				User seller = userService.queryByPhone(sellerPhone,true);
+				if (null == seller) {
+					return AjaxWebUtil.sendAjaxResponse(request, response, false,"代销账户无效", null);
+				}
+				product.setSellerWeChatNo(seller.getWeChatNo());
+				product.setSellerNickName(seller.getUserNick());
+				product.setHeadimg(seller.getHeadimg());
+			}
 			
-			product.setCharge(DoubleUtil.formatPrice(product.getPrice()*percent/100.00));
 			return  AjaxWebUtil.sendAjaxResponse(request, response, true,"查询产品成功", product);
 		}
 		catch (Exception e){
