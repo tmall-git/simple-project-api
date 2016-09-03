@@ -48,7 +48,7 @@ public class ImageUploadController {
 				File f = new File(foler+ File.separator + PrimaryKeyUtil.getUUID() + "." + suffix);
 				file.transferTo(f);
 				//先上传一张背景为黑色的图片
-				String blackFile = ImageHandleUtil.img_change(f,null, false, false);
+				String blackFile = ImageHandleUtil.img_change(f,"w", false, false);
 				//File f = FileUploadUtil.getFileByInputStream(file.getInputStream(), suffix, FileUploadUtil.UPLOAD_IMAGE_DIR);
 				String path = blackFile.replace(EnvPropertiesConfiger.getValue("uploadDir"), "");
 				if ( null != imagewidth) {
@@ -59,9 +59,9 @@ public class ImageUploadController {
 					}
 					if (width>0) {
 						//再上传一张背景为白色的图片
-						String whiteFile = ImageHandleUtil.img_change(f,"w", false, true);
-						ImageHandleUtil.cutImage(new File(whiteFile), width);
-						path = ImageHandleUtil.getScaleFilePath(whiteFile.replace(EnvPropertiesConfiger.getValue("uploadDir"), ""),width);
+						//String whiteFile = ImageHandleUtil.img_change(f,"w", false, true);
+						ImageHandleUtil.cutImage(new File(blackFile), width);
+						path = ImageHandleUtil.getScaleFilePath(blackFile.replace(EnvPropertiesConfiger.getValue("uploadDir"), ""),width);
 					}
 				}
 				images.add(path);

@@ -1,7 +1,5 @@
 package com.simple.admin.controller;
 
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,9 +20,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.simple.admin.util.AjaxWebUtil;
 import com.simple.admin.util.LoginUserUtil;
 import com.simple.admin.util.ProductTokenUtil;
-import com.simple.common.util.Base64;
+import com.simple.common.config.EnvPropertiesConfiger;
 import com.simple.common.util.DoubleUtil;
-import com.simple.common.util.ImageHandleUtil;
 import com.simple.constant.Constant;
 import com.simple.model.AgentSeller;
 import com.simple.model.PageResult;
@@ -36,6 +33,8 @@ import com.simple.model.User;
 import com.simple.service.AgentSellerService;
 import com.simple.service.ProductService;
 import com.simple.service.UserService;
+import com.simple.weixin.auth.JsConfigInfo;
+import com.simple.weixin.auth.WeiXinAuth;
 
 @Controller
 @RequestMapping(value = "/product")
@@ -234,13 +233,14 @@ public class ProductController {
 			if ( null != pi && pi.size() > 0 ) {
 				StringBuffer sb = new StringBuffer();
 				for (int i = 0 ; i < pi.size() ; i ++) {
+					ProductImage pii = pi.get(i);
 					if (i==pi.size()-1) {
-						sb.append(pi.get(i).getImage());
+						sb.append(pii.getImage());
 					}else {
-						sb.append(pi.get(i).getImage()).append(",");
+						sb.append(pii.getImage()).append(",");
 					}
 				}
-				product.setThumbnail(sb.toString());
+				product.setThumbnail(product.getImagePath(sb.toString()));
 			}
 			User owner = userService.queryByPhone(product.getOwner(),true);
 			if ( null == owner) {
@@ -345,6 +345,23 @@ public class ProductController {
 		}catch(Exception e) {
 			log.error(e.getMessage(),e);
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"更新失败:"+e.getLocalizedMessage(), e.getMessage());
+		}
+	}
+	
+	@RequestMapping(value = "shareConfgi",method=RequestMethod.GET)
+	@ResponseBody
+	public String shareConfgi(int id,String from,String owen,String ran,HttpServletRequest request, HttpServletResponse response) {
+		try {
+//			StringBuffer url = request.getRequestURL();
+//			String queryString =request.getQueryString();
+//			if(!StringUtils.isEmpty(queryString)){
+//				url.append("?").append(queryString);
+//			}
+			JsConfigInfo config = WeiXinAuth.getJsConfigInfo(String.format(EnvPropertiesConfiger.getValue("weixin_js_ticket_url"),id,from,owen,ran));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"获取配置成功", config);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"获取配置失败:"+e.getLocalizedMessage(), e.getMessage());
 		}
 	}
 	
