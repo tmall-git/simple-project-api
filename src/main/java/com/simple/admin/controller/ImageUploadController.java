@@ -39,6 +39,7 @@ public class ImageUploadController {
 				if (StringUtils.isEmpty(suffix)) {
 					suffix = request.getParameter("suffix");
 				}
+				suffix="jpg";
 				String imagewidth = request.getParameter("width");
 				String foler = FileUploadUtil.UPLOAD_IMAGE_DIR +System.currentTimeMillis();
 				File folerfile = new File(foler);
@@ -46,9 +47,9 @@ public class ImageUploadController {
 					folerfile.mkdirs();
 				}
 				File f = new File(foler+ File.separator + PrimaryKeyUtil.getUUID() + "." + suffix);
-				file.transferTo(f);
+				file.transferTo(f);//此处会生成图片到磁盘
 				//先上传一张背景为黑色的图片
-				String blackFile = ImageHandleUtil.img_change(f,"w", false, false);
+				String blackFile = ImageHandleUtil.img_change(f,null, false, false);
 				//File f = FileUploadUtil.getFileByInputStream(file.getInputStream(), suffix, FileUploadUtil.UPLOAD_IMAGE_DIR);
 				String path = blackFile.replace(EnvPropertiesConfiger.getValue("uploadDir"), "");
 				if ( null != imagewidth) {

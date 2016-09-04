@@ -234,13 +234,16 @@ public class ProductController {
 				StringBuffer sb = new StringBuffer();
 				for (int i = 0 ; i < pi.size() ; i ++) {
 					ProductImage pii = pi.get(i);
+					if (i==0) {
+						sb.append("[");
+					}
 					if (i==pi.size()-1) {
-						sb.append(pii.getImage());
+						sb.append("\"").append(pii.getImagePath(pii.getImage())).append("\"").append("]");
 					}else {
-						sb.append(pii.getImage()).append(",");
+						sb.append("\"").append(pii.getImagePath(pii.getImage())).append("\"").append(",");
 					}
 				}
-				product.setThumbnail(product.getImagePath(sb.toString()));
+				product.setThumbnail(sb.toString());
 			}
 			User owner = userService.queryByPhone(product.getOwner(),true);
 			if ( null == owner) {
@@ -406,10 +409,13 @@ public class ProductController {
 			if ( null != pi && pi.size() > 0 ) {
 				StringBuffer sb = new StringBuffer();
 				for (int i = 0 ; i < pi.size() ; i ++) {
+					if (i==0) {
+						sb.append("[");
+					}
 					if (i==pi.size()-1) {
-						sb.append(pi.get(i).getImage());
+						sb.append("\"").append(pi.get(i).getImagePath(pi.get(i).getImage())).append("\"").append("]");
 					}else {
-						sb.append(pi.get(i).getImage()).append(",");
+						sb.append("\"").append(pi.get(i).getImagePath(pi.get(i).getImage())).append("\"").append(",");
 					}
 				}
 				product.setThumbnail(sb.toString());
