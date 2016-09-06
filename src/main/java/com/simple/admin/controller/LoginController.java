@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -72,12 +73,20 @@ public class LoginController {
 				AjaxWebUtil.sendAjaxResponse(request, response, "密码错误");
 				return null;
 			}
+			
 			String headimgUrl = oi.getHeadimgurl();
 			String nickname = oi.getNickname();
-			user.setHeadimg(headimgUrl);
-			user.setUserNick(nickname);
-			user.setUserName(nickname);
-			userService.update(user);
+			if (!StringUtils.isEmpty(headimgUrl)) {
+				user.setHeadimg(headimgUrl);
+			}
+			if (!StringUtils.isEmpty(nickname)) {
+				user.setUserNick(nickname);
+				user.setUserName(nickname);
+			}
+			if (StringUtils.isEmpty(headimgUrl) && StringUtils.isEmpty(nickname)) {
+			}else {
+				userService.update(user);
+			}
 			LoginUserUtil.setCurrentUser(request, user);
 			//return AjaxWebUtil.sendAjaxResponse(request, response, true,"登陆成功", null);
 			String type = AjaxWebUtil.getRequestParameter(request,"type");
