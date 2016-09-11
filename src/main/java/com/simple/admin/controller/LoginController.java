@@ -38,13 +38,41 @@ public class LoginController {
 	 * @return
 	 */
 	@RequestMapping(value = "toAuthPage",method=RequestMethod.GET)
-	public String toAuthPage(String userPhone,String password,int type,HttpServletRequest request, HttpServletResponse response) {
-		String url = WeiXinAuth.getAuthUrl(EnvPropertiesConfiger.getValue("redirectLoginUrl")+"?userPhone="+userPhone+"&password="+password+"&type="+type, true, "");
+	public String toAuthPage(int type,HttpServletRequest request, HttpServletResponse response) {
+		String url = WeiXinAuth.getAuthUrl(EnvPropertiesConfiger.getValue("redirectAuthUrl")+"?&type="+type, true, "");
 		return "redirect:"+url;
 	}
 	
-	@RequestMapping(value = "doLogin",method=RequestMethod.GET)
-	public String doLogin(String code,HttpServletRequest request, HttpServletResponse response){
+	@RequestMapping(value = "doLogin",method=RequestMethod.POST)
+	@ResponseBody
+	public String doLogin(String password,String userPhone,HttpServletRequest request, HttpServletResponse response){
+		try {
+			//String password = AjaxWebUtil.getRequestParameter(request,"password");
+			//String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
+			
+			User user = userService.queryByPhone(userPhone,false);
+			if(user == null){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"用户不存在，请注册",null);
+			}
+			if(user.getStatus() != Constant.USER_STATUS_VALID){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"该账户已被封号，不能登录",null);
+			}
+			String dbPwd = user.getPassword(); 
+			if(!dbPwd.equals(getMD5Password(password, user))){
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"密码错误",null);
+			}
+			
+			LoginUserUtil.setCurrentUser(request, user);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"登陆成功", user);
+		}catch(Exception e) {
+			AjaxWebUtil.sendAjaxResponse(request, response, "登录失败:"+e.getLocalizedMessage());
+			return null;
+		}
+	}
+	
+	
+	@RequestMapping(value = "toAuth",method=RequestMethod.GET)
+	public String toAuth(String code,HttpServletRequest request, HttpServletResponse response){
 		try {
 			OAuthAccessToken authToken = WeiXinAuth.getOAuthAccessToken(code);
 			if ( null == authToken ) {
@@ -56,9 +84,7 @@ public class LoginController {
 				AjaxWebUtil.sendAjaxResponse(request, response, "订单授权失败：未获取到用户信息.");
 				return null;
 			}
-			String password = AjaxWebUtil.getRequestParameter(request,"password");
-			String userPhone = AjaxWebUtil.getRequestParameter(request,"userPhone");
-			
+			String userPhone = LoginUserUtil.getCurrentUser(request).getUserPhone();
 			User user = userService.queryByPhone(userPhone,false);
 			if(user == null){
 				AjaxWebUtil.sendAjaxResponse(request, response, "用户不存在，请注册");
@@ -68,12 +94,6 @@ public class LoginController {
 				AjaxWebUtil.sendAjaxResponse(request, response, "该账户已被封号，不能登录");
 				return  null;
 			}
-			String dbPwd = user.getPassword(); 
-			if(!dbPwd.equals(getMD5Password(password, user))){
-				AjaxWebUtil.sendAjaxResponse(request, response, "密码错误");
-				return null;
-			}
-			
 			String headimgUrl = oi.getHeadimgurl();
 			String nickname = oi.getNickname();
 			if (!StringUtils.isEmpty(headimgUrl)) {

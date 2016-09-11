@@ -229,6 +229,9 @@ public class ProductController {
 			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架", null);
 			}
+			if (product.getProductStatus()==Constant.PRODUCT_STATUS_DELETE) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经被删除", null);
+			}
 			List<ProductImage> pi = productService.getImage(id);
 			if ( null != pi && pi.size() > 0 ) {
 				StringBuffer sb = new StringBuffer();
@@ -404,6 +407,9 @@ public class ProductController {
 			Product product = productService.getById(id,false);
 			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架，不能购买", null);
+			}
+			if (product.getProductStatus()==Constant.PRODUCT_STATUS_DELETE) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经被删除", null);
 			}
 			List<ProductImage> pi = productService.getImage(id);
 			if ( null != pi && pi.size() > 0 ) {

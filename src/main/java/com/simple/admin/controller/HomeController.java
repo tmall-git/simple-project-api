@@ -184,6 +184,7 @@ public class HomeController {
 						sv.setWechatName(agent.getWeChatNo());
 						sv.setNickName(agent.getUserNick());
 						sv.setHeadimg(agent.getHeadimg());
+						sv.setStatus(agent.getStatus());
 					}
 					pageList.add(sv);
 				}
@@ -238,6 +239,7 @@ public class HomeController {
 						asm.setWeiChat(seller.getWeChatNo());
 						asm.setNickName(seller.getUserNick());
 						asm.setHeadimg(seller.getHeadimg());
+						asm.setStatus(seller.getStatus());
 					}
 					pageList.add(asm);
 				}
