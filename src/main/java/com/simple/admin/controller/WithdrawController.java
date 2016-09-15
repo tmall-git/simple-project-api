@@ -159,6 +159,22 @@ public class WithdrawController {
 	@ResponseBody
 	public String finishcash(String id,HttpServletRequest request, HttpServletResponse response){
 		try {
+			User user = LoginUserUtil.getCurrentUser(request);
+			String phone = EnvPropertiesConfiger.getValue("adminPhone");
+			if (StringUtils.isEmpty(phone)) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "提现失败：管理员电话配置为空", null);
+			}
+			String[] phones = phone.split(",");
+			boolean isvalid = false;
+			for (int i = 0 ; i < phones.length ; i ++) {
+				if (user.getUserPhone().equals(phones[i])) {
+					isvalid = true;
+					break;
+				}
+			}
+			if (!isvalid) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false, "提现失败：只有管理员才能进行操作", null);
+			}
 			Account a = withdrawService.queryById(id);
 			if (null == a) {
 				return AjaxWebUtil.sendAjaxResponse(request, response, false, "记录不存在", null);

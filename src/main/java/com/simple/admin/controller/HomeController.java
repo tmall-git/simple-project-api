@@ -179,6 +179,7 @@ public class HomeController {
 					sv.setProductCount(productCount);
 					sv.setSellerAmount(charge==null?0d:charge);
 					sv.setUserPhone(as.getAgentPhone());
+					sv.setWatchCount(as.getWatchCount());
 					User agent = userService.queryByPhone(as.getAgentPhone(),false);
 					if (null != agent) {
 						sv.setWechatName(agent.getWeChatNo());
