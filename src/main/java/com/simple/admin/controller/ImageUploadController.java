@@ -52,7 +52,7 @@ public class ImageUploadController {
 				}
 				String filepath = foler+ File.separator + PrimaryKeyUtil.getUUID() ;
 				String path = filepath+".jpg";
-				Thumbnailator.scale(file.getInputStream(), 1920, 1080, 0.5f, 0, filepath+".jpg");
+				Thumbnailator.scale(file.getInputStream(), 1920, 1080, 0.4f, 0, filepath+".jpg");
 				long time1 = System.currentTimeMillis();
 				System.out.println(">>>>img time1 : "+(time1-timestart));
 				if (null != imagewidth) {
@@ -62,7 +62,7 @@ public class ImageUploadController {
 					}catch(Exception e) {
 					}
 					if (width>0) {
-						Thumbnailator.scale(file.getInputStream(), width, width, 0.5f, 0, filepath+"_"+width+".jpg");
+						Thumbnailator.cutSquareImage(new File(path), width, width, 0.8f, 0, filepath+"_"+width+".jpg");
 						path = filepath+"_"+width+".jpg";
 					}
 				}
