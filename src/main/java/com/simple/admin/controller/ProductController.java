@@ -40,6 +40,7 @@ import com.simple.weixin.auth.WeiXinAuth;
 @RequestMapping(value = "/product")
 public class ProductController {
 	
+	
 	private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
 	@Autowired
@@ -378,12 +379,34 @@ public class ProductController {
 			User user = LoginUserUtil.getCurrentUser(request);
 			String token = ProductTokenUtil.getToken(id, user.getUserPhone());
 			//更新用户分享次数
-			Product product = productService.getById(id, false);
-			if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
-				return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架，不能分享", null);
+			//Product product = productService.getById(id, false);
+			//if (product.getProductStatus()==Constant.PRODUCT_STATUS_OFFLINE) {
+			//	return AjaxWebUtil.sendAjaxResponse(request, response, false,"产品已经下架，不能分享", null);
+			//}
+			//if ( null != product) {
+			//	agentSellerService.increaseWatchCount(product.getOwner(), user.getUserPhone());
+			//}
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"分享成功", token);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"分享失败:"+e.getLocalizedMessage(), e.getMessage());
+		}
+	}
+	
+	@RequestMapping(value = "sharePage",method=RequestMethod.GET)
+	@ResponseBody
+	public String sharePage(Integer id,String token,HttpServletRequest request, HttpServletResponse response) {
+		try {
+			String sellerPhone = ProductTokenUtil.validToken(id, token);
+			if (StringUtils.isEmpty(sellerPhone)) {
+				return AjaxWebUtil.sendAjaxResponse(request, response, false,"token无效", null);
 			}
+			//更新用户分享次数
+			Product product = productService.getById(id, false);
 			if ( null != product) {
-				agentSellerService.increaseWatchCount(product.getOwner(), user.getUserPhone());
+				if (product.getProductStatus()!=Constant.PRODUCT_STATUS_OFFLINE) {
+					agentSellerService.increaseWatchCount(product.getOwner(), sellerPhone);
+				}
 			}
 			return AjaxWebUtil.sendAjaxResponse(request, response, true,"分享成功", token);
 		}catch(Exception e) {
