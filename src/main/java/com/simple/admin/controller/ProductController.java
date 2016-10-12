@@ -306,7 +306,7 @@ public class ProductController {
 			p.setOwner(LoginUserUtil.getCurrentUser(request).getUserPhone());
 			p.setFirstImg(firstImg);
 			productService.insert(p, imges);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"添加成功", null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"添加成功", p.getId());
 		}catch(Exception e) {
 			log.error("添加失败",e);
 			e.printStackTrace();
@@ -335,7 +335,7 @@ public class ProductController {
 			p.setFirstImg(firstImg);
 			//p.setProductStatus(Integer.parseInt(productStatus));
 			productService.update(p,imges);
-			return AjaxWebUtil.sendAjaxResponse(request, response, true,"修改成功", null);
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"修改成功", id);
 		}catch(Exception e) {
 			log.error("修改失败",e);
 			e.printStackTrace();
@@ -371,6 +371,26 @@ public class ProductController {
 			return AjaxWebUtil.sendAjaxResponse(request, response, false,"获取配置失败:"+e.getLocalizedMessage(), e.getMessage());
 		}
 	}
+	
+	@RequestMapping(value = "infoShareConfig",method=RequestMethod.GET)
+	@ResponseBody
+	public String infoShareConfig(int id,String owen,String token,String from,int isappinstalled,HttpServletRequest request, HttpServletResponse response) {
+		try {
+//			StringBuffer url = request.getRequestURL();
+//			String queryString =request.getQueryString();
+//			if(!StringUtils.isEmpty(queryString)){
+//				url.append("?").append(queryString);
+//			}
+			JsConfigInfo config = WeiXinAuth.getJsConfigInfo(String.format(EnvPropertiesConfiger.getValue("weixin_info_ticket_url"),
+					id,owen,token,from,isappinstalled));
+			return AjaxWebUtil.sendAjaxResponse(request, response, true,"获取配置成功", config);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return AjaxWebUtil.sendAjaxResponse(request, response, false,"获取配置失败:"+e.getLocalizedMessage(), e.getMessage());
+		}
+	}
+	
+	
 	
 	@RequestMapping(value = "share",method=RequestMethod.GET)
 	@ResponseBody
