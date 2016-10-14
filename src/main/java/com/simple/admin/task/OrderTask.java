@@ -55,6 +55,7 @@ public class OrderTask {
 					SmsClient.sendMsg(order.getSeller(), "您有一笔订单因为卖家延期未发货被取消交易,商品名："+order.getProduct_name()+",订单号："+order.getOrder_no());
 				} catch (Exception e) {
 					e.printStackTrace();
+					SmsClient.sendAdminMsg("订单["+orders.get(i).getOrder_no()+"]未发货取消任务失败："+e.getLocalizedMessage());
 				}
 			}
 		}

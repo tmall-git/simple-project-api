@@ -437,6 +437,12 @@ public class HomeController {
 			//总带看数
 			Integer watchcount = agentSellerService.querySumWatchCount(owner);
 			shopResult.put("watchCount", watchcount==null?0:watchcount);
+			AgentSeller as = agentSellerService.queryByAgentAndSeller(owner,seller.getUserPhone());
+			if ( null != as ) {
+				shopResult.put("sellerWatchCount", as.getWatchCount());	
+			}else {
+				shopResult.put("sellerWatchCount", 0);
+			}
 			result.put("shop", shopResult);
 			Map sellerResult = getSellerBussinessMap(owner,seller.getUserPhone(),request,DateUtil.getNowMonthBegin(),DateUtil.getNowMonthEnd(),false);
 			result.put("seller", sellerResult);
