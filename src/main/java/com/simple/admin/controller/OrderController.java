@@ -428,7 +428,7 @@ public class OrderController {
 			if (order.getOrder_status()!=Constant.ORDER_STATUS_UNPAY) {
 				return JSONObject.toJSONString(new ResponseInfo(new ResponseStatus(false,"4","订单已经支付"), ProductTokenUtil.getOrderListToken(order.getUser_phone())));
 			}
-			return "redirect:"+String.format(EnvPropertiesConfiger.getValue("confirmOrderUrl"), orderCode,orderToken,authToken.getOpenid());
+			return "redirect:"+String.format(EnvPropertiesConfiger.getValue("confirmOrderUrl"), orderCode,orderToken,authToken.getOpenid(),order.getOwner(),order.getProduct_id());
 		}catch(Exception e) {
 			e.printStackTrace();
 			return AjaxWebUtil.sendAjaxResponse(request, response, false, "订单创建失败:"+e.getLocalizedMessage(), null);
